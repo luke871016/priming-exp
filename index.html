@@ -330,6 +330,7 @@ let rtStart = null;
 let responseEnabled = false;
 let timeoutHandle = null;
 let audioCtx = null;
+let currentAudioSource = null;
 
 // ============================================================
 // 初始化
@@ -522,6 +523,7 @@ function runNextTrial() {
 async function runTrial(trial) {
   clearFeedback();
   disableResponse();
+  stopCurrentAudio();
   resetUI();
 
   const iti = parseInt(config.iti_ms) || 800;
@@ -563,14 +565,14 @@ async function runTrial(trial) {
     return;
   }
 
-  // ── 4. 播放音訊，onended 啟動計時 ──
+  // ── 4. 播放音訊，音檔開始時同步啟動計時與作答 ──
   setAudioStatus('', false);
   hideElement('fixation');
 
   rtStart = null;
   responseEnabled = false;
 
-  playAudioBuffer(audioBuffer, () => {
+  currentAudioSource = playAudioBuffer(audioBuffer, () => {
     rtStart = performance.now();
     enableResponse();
     setAudioStatus('請判斷：詞彙 (F) 或 非詞 (J)？');
@@ -579,9 +581,12 @@ async function runTrial(trial) {
     timeoutHandle = setTimeout(() => {
       if (responseEnabled) {
         disableResponse();
+        stopCurrentAudio();
         advanceTrial(trial, null, null, true, '');
       }
     }, timeout);
+  }, source => {
+    if (currentAudioSource === source) currentAudioSource = null;
   });
 }
 
@@ -590,6 +595,7 @@ function recordResponse(isWord) {
   const rt = performance.now() - rtStart;
   clearTimeout(timeoutHandle);
   disableResponse();
+  stopCurrentAudio();
 
   const trial = currentTrialList[currentIndex];
   const accuracy = (isWord === trial.answer) ? 1 : 0;
@@ -644,13 +650,26 @@ async function loadAudio(url) {
   return ctx.decodeAudioData(arrayBuffer);
 }
 
-function playAudioBuffer(buffer, onEnded) {
+function playAudioBuffer(buffer, onStarted, onEnded) {
   const ctx = getAudioCtx();
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   source.connect(ctx.destination);
-  source.onended = onEnded;
+  source.onended = () => {
+    if (onEnded) onEnded(source);
+  };
   source.start();
+  if (onStarted) onStarted(source);
+  return source;
+}
+
+function stopCurrentAudio() {
+  if (!currentAudioSource) return;
+  const source = currentAudioSource;
+  currentAudioSource = null;
+  try {
+    source.stop();
+  } catch(e) {}
 }
 
 // ============================================================
