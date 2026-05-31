@@ -250,8 +250,8 @@
 <!-- ===== 音量調整 ===== -->
 <div id="screen-volume-check" class="card hidden">
   <h2>音量調整</h2>
-  <p class="main">此實驗需要你聆聽並且辨識台語字詞，請在安靜不會被打擾的環境進行，並且建議戴耳機。</p>
-  <p>請播放此聲音檔案，調整音量到可以清楚辨識的程度，調整完成後請點擊下一步。</p>
+  <p class="main">此實驗需要你聆聽並且辨識台語字詞，請在安靜不會被打擾的環境進行，並且建議戴耳機</p>
+  <p>請播放此聲音檔案，調整音量到可以清楚辨識的程度</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
     <button class="btn btn-outline" onclick="playVolumeCheckAudio()">播放聲音🔊</button>
   </div>
@@ -395,11 +395,11 @@ async function loadConfig() {
     config = cfgRes.config;
     allTrials = trialsRes.trials;
 
-    practiceTrials   = allTrials.filter(t => t.type === 'practice');
+    practiceTrials   = assignBalancedPrimes(allTrials.filter(t => t.type === 'practice'));
     experimentTrials = allTrials.filter(t => t.type === 'experiment');
 
-    // 隨機化實驗題目順序
-    experimentTrials = shuffle(experimentTrials);
+    // 隨機化實驗題目順序，並平衡 A/B prime 分配
+    experimentTrials = assignBalancedPrimes(shuffle(experimentTrials));
 
     await preloadAllAudio();
 
@@ -531,10 +531,10 @@ function playVolumeCheckAudio() {
     volumeCheckAudio = playAudioBuffer(audioBuffer, null, source => {
       if (volumeCheckAudio === source) volumeCheckAudio = null;
     });
-    status.textContent = '請重複播放音檔，調整音量至適當大小後點擊下一步。';
+    status.textContent = '請重複播放音檔，調整音量至適當大小後點擊下一步';
     nextButton.classList.remove('hidden');
   } catch(e) {
-    status.textContent = '聲音檔案播放失敗，請再點擊播放一次。';
+    status.textContent = '聲音檔案播放失敗，請再點擊播放一次';
     nextButton.classList.add('hidden');
     console.error(e);
   }
@@ -608,8 +608,8 @@ async function runTrial(trial) {
   const primeDur = parseInt(config.prime_ms) || 300;
   const timeout = parseInt(config.response_timeout_ms) || 2000;
 
-  // 隨機分配 prime
-  const primeAssigned = Math.random() < 0.5 ? 'A' : 'B';
+  // 使用載入題目時預先配置的 prime，確保偶數題時 A/B 數量一致
+  const primeAssigned = trial._primeAssigned;
   const primeText = primeAssigned === 'A' ? trial.prime_a : trial.prime_b;
 
   // 記錄分配的 prime（供儲存用）
@@ -1016,6 +1016,45 @@ function renderInstruction(elId, text, fallback) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function assignBalancedPrimes(trials) {
+  const groups = new Map();
+  const assignedTrials = trials.map(trial => ({ ...trial }));
+
+  assignedTrials.forEach((trial, index) => {
+    const groupKey = getItemGroup(trial.item_id);
+    if (!groups.has(groupKey)) groups.set(groupKey, []);
+    groups.get(groupKey).push(index);
+  });
+
+  groups.forEach(indexes => {
+    const assignments = createBalancedPrimeAssignments(indexes.length);
+    indexes.forEach((trialIndex, assignmentIndex) => {
+      assignedTrials[trialIndex]._primeAssigned = assignments[assignmentIndex];
+    });
+  });
+
+  return assignedTrials;
+}
+
+function getItemGroup(itemId) {
+  const match = String(itemId || '').match(/^[A-Za-z]+/);
+  return match ? match[0] : '';
+}
+
+function createBalancedPrimeAssignments(count) {
+  const half = Math.floor(count / 2);
+  const assignments = [
+    ...Array(half).fill('A'),
+    ...Array(half).fill('B')
+  ];
+
+  if (count % 2 === 1) {
+    assignments.push(Math.random() < 0.5 ? 'A' : 'B');
+  }
+
+  return shuffle(assignments);
+}
 
 function shuffle(arr) {
   const a = [...arr];
