@@ -8,24 +8,18 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #fafaf9;
-    --surface: #ffffff;
-    --border: #e5e3dc;
-    --text: #1a1a18;
-    --text-muted: #6b6b67;
-    --accent: #534ab7;
-    --accent-light: #eeedfe;
-    --success: #1d9e75;
-    --danger: #e24b4a;
+    color-scheme: dark;
+    --bg: #18181a;
+    --surface: #232325;
+    --border: #3a3a3c;
+    --text: #e8e6e0;
+    --text-muted: #888884;
+    --accent: #7f77dd;
+    --accent-light: #26215c;
+    --success: #5dcaa5;
+    --danger: #f09595;
     --radius: 12px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 8px rgba(0,0,0,.04);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #18181a; --surface: #232325; --border: #3a3a3c;
-      --text: #e8e6e0; --text-muted: #888884; --accent: #7f77dd;
-      --accent-light: #26215c; --success: #5dcaa5; --danger: #f09595;
-    }
   }
 
   body {
@@ -146,6 +140,15 @@
   .fb-correct { color: var(--success); }
   .fb-wrong   { color: var(--danger); }
 
+  #debug-panel {
+    margin-top: 16px; padding: 10px 12px;
+    border: 1px dashed var(--accent); border-radius: 8px;
+    background: var(--accent-light); color: var(--text);
+    font-size: 13px; text-align: left;
+  }
+  #debug-panel div + div { margin-top: 4px; }
+  .debug-label { font-weight: 600; color: var(--accent); }
+
   /* 進度條 */
   .progress-wrap {
     margin-bottom: 28px;
@@ -223,7 +226,7 @@
 <div id="screen-loading" class="card hidden">
   <div style="text-align:center; padding: 40px 0;">
     <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 16px;"></div>
-    <p>載入實驗設定中...</p>
+    <p id="loading-message">載入實驗設定中...</p>
   </div>
 </div>
 
@@ -244,6 +247,18 @@
   <button class="btn btn-primary" onclick="submitSurvey()">繼續</button>
 </div>
 
+<!-- ===== 音量調整 ===== -->
+<div id="screen-volume-check" class="card hidden">
+  <h2>音量調整</h2>
+  <p class="main">此實驗需要你聆聽並且辨識台語字詞，請在安靜不會被打擾的環境進行，並且建議戴耳機。</p>
+  <p>請播放此聲音檔案，調整音量到可以清楚辨識的程度，調整完成後請點擊下一步。</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
+    <button class="btn btn-outline" onclick="playVolumeCheckAudio()">播放聲音🔊</button>
+  </div>
+  <div id="volume-check-status" style="font-size:14px;color:var(--text-muted);margin-top:12px;"></div>
+  <button id="volume-check-next" class="btn btn-primary hidden" style="margin-top:12px;" onclick="continueAfterVolumeCheck()">下一步</button>
+</div>
+
 <!-- ===== 練習題說明 ===== -->
 <div id="screen-practice-intro" class="card hidden">
   <span class="phase-label">練習階段</span>
@@ -251,8 +266,8 @@
   <div id="practice-instruction-text" style="margin-bottom:20px;"></div>
   <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:20px;font-size:14px;">
     <strong>按鍵對應：</strong><br>
-    <span class="key-badge">F</span> = 台語真實詞彙&nbsp;&nbsp;
-    <span class="key-badge">J</span> = 非詞（不是台語詞彙）<br>
+    <span class="key-badge">F</span> = 台語<strong>存在</strong>這個詞&nbsp;&nbsp;
+    <span class="key-badge">J</span> = 台語<strong>不存在</strong>這個詞<br>
     或直接點擊畫面上的按鈕
   </div>
   <button class="btn btn-primary btn-lg" onclick="startPhase('practice')">開始練習</button>
@@ -287,23 +302,33 @@
     </div>
     <div id="response-area">
       <button class="resp-btn word" id="btn-word" disabled onclick="recordResponse(true)">
-        詞彙<br><small style="font-weight:400;font-size:13px;">(F)</small>
+        存在<br><small style="font-weight:400;font-size:13px;">(F)</small>
       </button>
       <button class="resp-btn nonword" id="btn-nonword" disabled onclick="recordResponse(false)">
-        非詞<br><small style="font-weight:400;font-size:13px;">(J)</small>
+        不存在<br><small style="font-weight:400;font-size:13px;">(J)</small>
       </button>
     </div>
     <div id="feedback-area"></div>
-    <div class="key-hint">按 <span class="key-badge">F</span> 詞彙 &nbsp;|&nbsp; <span class="key-badge">J</span> 非詞</div>
+    <div class="key-hint">按 <span class="key-badge">F</span> 存在 &nbsp;|&nbsp; <span class="key-badge">J</span> 不存在</div>
+    <div id="debug-panel" class="hidden">
+      <div><span class="debug-label">item_id:</span> <span id="debug-item-id"></span></div>
+      <div><span class="debug-label">notes:</span> <span id="debug-notes"></span></div>
+    </div>
   </div>
 </div>
 
 <!-- ===== 結果頁 ===== -->
 <div id="screen-result" class="card hidden">
-  <h2>實驗完成，謝謝您的參與！</h2>
-  <div class="result-grid" id="result-stats"></div>
-  <p id="result-msg"></p>
-  <div id="saving-status" style="font-size:14px;color:var(--text-muted);margin-top:12px;"></div>
+  <div id="result-saving" style="text-align:center; padding: 40px 0;">
+    <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 16px;"></div>
+    <p class="main">資料正在儲存，請不要關閉網頁</p>
+  </div>
+  <div id="result-complete" class="hidden">
+    <h2 id="result-title">實驗完成，謝謝您的參與！</h2>
+    <div class="result-grid" id="result-stats"></div>
+    <p id="result-msg"></p>
+    <div id="saving-status" style="font-size:14px;color:var(--text-muted);margin-top:12px;"></div>
+  </div>
 </div>
 
 <script>
@@ -311,6 +336,12 @@
 // 全域狀態
 // ============================================================
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzB8gAwM0lLUZfAzACO9TmMeaMNPwAeBG4yH7RzRtB88CSrWm7qOhV5k72Fw4Pqmu7t/exec';
+const VOLUME_CHECK_AUDIO_URL = 'https://project3.kiantiong.com/T01.wav';
+const MAX_AUDIO_LOAD_RETRIES = 3;
+const DEBUG_MODE = (() => {
+  const value = new URLSearchParams(window.location.search).get('debug');
+  return value !== null && value !== '0' && value.toLowerCase() !== 'false';
+})();
 
 let config = {};
 let allTrials = [];
@@ -324,6 +355,7 @@ let currentIndex = 0;
 let surveyData = {};
 let sessionId = '';
 let trialResults = [];
+let isSavingResults = false;
 
 // RT 計時
 let rtStart = null;
@@ -331,6 +363,9 @@ let responseEnabled = false;
 let timeoutHandle = null;
 let audioCtx = null;
 let currentAudioSource = null;
+let volumeCheckAudio = null;
+let audioBufferCache = new Map();
+let audioLoadPromises = new Map();
 
 // ============================================================
 // 初始化
@@ -351,6 +386,7 @@ function saveGasUrl() {
 // ============================================================
 async function loadConfig() {
   try {
+    setLoadingMessage('載入實驗設定中...');
     const [cfgRes, trialsRes] = await Promise.all([
       fetch(`${GAS_URL}?action=getConfig`).then(r => r.json()),
       fetch(`${GAS_URL}?action=getTrials`).then(r => r.json())
@@ -365,11 +401,13 @@ async function loadConfig() {
     // 隨機化實驗題目順序
     experimentTrials = shuffle(experimentTrials);
 
+    await preloadAllAudio();
+
     renderWelcome();
     showScreen('welcome');
   } catch(e) {
     showScreen('loading');
-    alert('載入失敗，請確認 GAS URL 是否正確：\n' + e.message);
+    alert('載入失敗，請確認實驗設定與聲音檔案是否可正常存取：\n' + e.message);
   }
 }
 
@@ -415,7 +453,7 @@ function renderSurveyForm() {
     } else if (field.type === 'select') {
       const sel = document.createElement('select');
       sel.id = 'survey_' + field.key;
-      sel.innerHTML = '<option value="">請選擇...</option>' +
+      sel.innerHTML = '<option value="">請選擇最接近的描述...</option>' +
         field.options.map(o => `<option value="${o}">${o}</option>`).join('');
       group.appendChild(sel);
     } else if (field.type === 'radio') {
@@ -478,6 +516,45 @@ function submitSurvey() {
     return;
   }
 
+  showScreen('volume-check');
+}
+
+function playVolumeCheckAudio() {
+  const status = document.getElementById('volume-check-status');
+  const nextButton = document.getElementById('volume-check-next');
+
+  try {
+    stopVolumeCheckAudio();
+    const audioBuffer = audioBufferCache.get(VOLUME_CHECK_AUDIO_URL);
+    if (!audioBuffer) throw new Error('volume check audio is not preloaded');
+
+    volumeCheckAudio = playAudioBuffer(audioBuffer, null, source => {
+      if (volumeCheckAudio === source) volumeCheckAudio = null;
+    });
+    status.textContent = '請重複播放音檔，調整音量至適當大小後點擊下一步。';
+    nextButton.classList.remove('hidden');
+  } catch(e) {
+    status.textContent = '聲音檔案播放失敗，請再點擊播放一次。';
+    nextButton.classList.add('hidden');
+    console.error(e);
+  }
+}
+
+function continueAfterVolumeCheck() {
+  stopVolumeCheckAudio();
+  goToPracticeIntro();
+}
+
+function stopVolumeCheckAudio() {
+  if (!volumeCheckAudio) return;
+  const source = volumeCheckAudio;
+  volumeCheckAudio = null;
+  try {
+    source.stop();
+  } catch(e) {}
+}
+
+function goToPracticeIntro() {
   renderInstruction('practice-instruction-text', config.practice_instruction,
     '接下來會有幾題練習題，讓您熟悉實驗流程。\n每題您會先看到一個華語詞彙（Prime），接著聽到一個台語詞彙的發音。\n請判斷您聽到的是否為真實的台語詞彙，越快越準確越好。');
   showScreen('practice-intro');
@@ -525,6 +602,7 @@ async function runTrial(trial) {
   disableResponse();
   stopCurrentAudio();
   resetUI();
+  setDebugInfo(trial, '');
 
   const iti = parseInt(config.iti_ms) || 800;
   const primeDur = parseInt(config.prime_ms) || 300;
@@ -575,7 +653,8 @@ async function runTrial(trial) {
   currentAudioSource = playAudioBuffer(audioBuffer, () => {
     rtStart = performance.now();
     enableResponse();
-    setAudioStatus('請判斷：詞彙 (F) 或 非詞 (J)？');
+    showElement('prime-display', '🔊');
+    setDebugInfo(trial, trial.notes || '');
 
     // 超時處理
     timeoutHandle = setTimeout(() => {
@@ -587,6 +666,8 @@ async function runTrial(trial) {
     }, timeout);
   }, source => {
     if (currentAudioSource === source) currentAudioSource = null;
+    showElement('prime-display', '');
+    setDebugInfo(trial, '');
   });
 }
 
@@ -598,12 +679,6 @@ function recordResponse(isWord) {
   stopCurrentAudio();
 
   const trial = currentTrialList[currentIndex];
-  const accuracy = (isWord === trial.answer) ? 1 : 0;
-
-  // 練習題才顯示 feedback
-  if (currentPhase === 'practice') {
-    showFeedback(accuracy === 1);
-  }
 
   advanceTrial(trial, isWord, rt, false, '');
 }
@@ -638,11 +713,71 @@ function getAudioCtx() {
   if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   return audioCtx;
 }
 
-async function loadAudio(url) {
+async function preloadAllAudio() {
+  const audioUrls = getAudioUrlsToPreload();
+  if (audioUrls.length === 0) return;
+
+  for (let i = 0; i < audioUrls.length; i++) {
+    setLoadingMessage(`載入聲音檔案中... ${i + 1} / ${audioUrls.length}`);
+    await loadAudio(audioUrls[i], {
+      onRetry: retryCount => {
+        setLoadingMessage(`載入聲音檔案中... ${i + 1} / ${audioUrls.length}（重試 ${retryCount} / ${MAX_AUDIO_LOAD_RETRIES}）`);
+      }
+    });
+  }
+}
+
+function getAudioUrlsToPreload() {
+  const urls = new Set([VOLUME_CHECK_AUDIO_URL]);
+  allTrials.forEach(trial => {
+    if (trial.target_url) urls.add(trial.target_url);
+  });
+  return [...urls];
+}
+
+async function loadAudio(url, options = {}) {
+  if (!url) throw new Error('Missing audio URL');
+  if (audioBufferCache.has(url)) return audioBufferCache.get(url);
+  if (audioLoadPromises.has(url)) return audioLoadPromises.get(url);
+
+  const loadPromise = loadAudioWithRetries(url, options.onRetry)
+    .then(audioBuffer => {
+      audioBufferCache.set(url, audioBuffer);
+      audioLoadPromises.delete(url);
+      return audioBuffer;
+    })
+    .catch(error => {
+      audioLoadPromises.delete(url);
+      throw error;
+    });
+
+  audioLoadPromises.set(url, loadPromise);
+  return loadPromise;
+}
+
+async function loadAudioWithRetries(url, onRetry) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= MAX_AUDIO_LOAD_RETRIES; attempt++) {
+    try {
+      return await fetchAndDecodeAudio(url);
+    } catch(e) {
+      lastError = e;
+      if (attempt >= MAX_AUDIO_LOAD_RETRIES) break;
+      const retryCount = attempt + 1;
+      if (onRetry) onRetry(retryCount);
+      await sleep(500 * retryCount);
+    }
+  }
+
+  throw lastError;
+}
+
+async function fetchAndDecodeAudio(url) {
   const ctx = getAudioCtx();
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -670,6 +805,9 @@ function stopCurrentAudio() {
   try {
     source.stop();
   } catch(e) {}
+  if (DEBUG_MODE) {
+    document.getElementById('debug-notes').textContent = '';
+  }
 }
 
 // ============================================================
@@ -694,24 +832,47 @@ function finishExperiment() {
     ? Math.round(correctTrials.length / trialResults.length * 100)
     : 0;
 
-  document.getElementById('result-stats').innerHTML = `
-    <div class="result-cell"><div class="num">${trialResults.length}</div><div class="lbl">完成題數</div></div>
-    <div class="result-cell"><div class="num">${acc}%</div><div class="lbl">正確率</div></div>
-    <div class="result-cell"><div class="num">${avgRt}</div><div class="lbl">平均 RT (ms)</div></div>
-    <div class="result-cell"><div class="num">${trialResults.filter(t=>t.timed_out).length}</div><div class="lbl">超時次數</div></div>
-  `;
-  document.getElementById('result-msg').textContent =
-    config.result_message || '您的資料已記錄，感謝配合！';
-
+  showResultSaving();
   showScreen('result');
-  saveResultsToSheet();
+  saveResultsToSheet({ avgRt, acc });
 }
 
-async function saveResultsToSheet() {
-  const status = document.getElementById('saving-status');
-  status.textContent = '資料傳送中...';
+function clearResultStats() {
+  document.getElementById('result-stats').innerHTML = '';
+}
 
+function showResultSaving() {
+  document.getElementById('result-saving').classList.remove('hidden');
+  document.getElementById('result-complete').classList.add('hidden');
+}
+
+function showResultComplete(avgRt, acc, savedCount) {
+  clearResultStats();
+  document.getElementById('result-title').textContent = '實驗完成，謝謝您的參與！';
+  document.getElementById('result-msg').textContent =
+    config.result_message || '您的資料已記錄，感謝配合！';
+  const status = document.getElementById('saving-status');
+  status.textContent = `資料已成功儲存（${savedCount} 筆）`;
+  status.style.color = 'var(--success)';
+  document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-complete').classList.remove('hidden');
+}
+
+function showResultSaveError(errorMessage) {
+  const status = document.getElementById('saving-status');
+  clearResultStats();
+  document.getElementById('result-title').textContent = '資料傳送失敗';
+  document.getElementById('result-msg').textContent =
+    '請告知實驗者。資料已備份至本機，請先不要清除瀏覽器資料。';
+  status.textContent = '錯誤：' + errorMessage;
+  status.style.color = 'var(--danger)';
+  document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-complete').classList.remove('hidden');
+}
+
+async function saveResultsToSheet(summary) {
   const deviceInfo = collectDeviceInfo();
+  isSavingResults = true;
 
   try {
     const res = await fetch(GAS_URL, {
@@ -728,18 +889,17 @@ async function saveResultsToSheet() {
     });
     const data = await res.json();
     if (data.ok) {
-      status.textContent = `資料已成功儲存（${data.saved} 筆）`;
-      status.style.color = 'var(--success)';
+      showResultComplete(summary.avgRt, summary.acc, data.saved);
     } else {
       throw new Error(data.error);
     }
   } catch(e) {
-    status.textContent = '資料傳送失敗，請告知實驗者。錯誤：' + e.message;
-    status.style.color = 'var(--danger)';
     // fallback: 存到 localStorage
     localStorage.setItem('priming_backup_' + sessionId,
       JSON.stringify({ surveyData, trialResults, deviceInfo }));
-    status.textContent += '（已備份至本機）';
+    showResultSaveError(e.message);
+  } finally {
+    isSavingResults = false;
   }
 }
 
@@ -778,6 +938,11 @@ function showScreen(name) {
   document.getElementById('screen-' + name)?.classList.remove('hidden');
 }
 
+function setLoadingMessage(message) {
+  const el = document.getElementById('loading-message');
+  if (el) el.textContent = message;
+}
+
 function showElement(id, text) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -810,6 +975,20 @@ function disableResponse() {
 function resetUI() {
   document.getElementById('feedback-area').textContent = '';
   document.getElementById('feedback-area').className = '';
+}
+
+function setDebugInfo(trial, notes) {
+  const panel = document.getElementById('debug-panel');
+  if (!panel) return;
+
+  if (!DEBUG_MODE) {
+    panel.classList.add('hidden');
+    return;
+  }
+
+  panel.classList.remove('hidden');
+  document.getElementById('debug-item-id').textContent = trial?.item_id || '';
+  document.getElementById('debug-notes').textContent = notes || '';
 }
 
 function clearFeedback() {
@@ -854,6 +1033,12 @@ document.addEventListener('keydown', e => {
   if (e.repeat) return;
   if (e.code === 'KeyF') recordResponse(true);
   if (e.code === 'KeyJ') recordResponse(false);
+});
+
+window.addEventListener('beforeunload', e => {
+  if (!isSavingResults) return;
+  e.preventDefault();
+  e.returnValue = '';
 });
 
 // 第一次互動時初始化 AudioContext（瀏覽器政策需要）
