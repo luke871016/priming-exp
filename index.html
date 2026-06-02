@@ -255,7 +255,7 @@
 <!-- ===== 音量調整 ===== -->
 <div id="screen-volume-check" class="card hidden">
   <h2>音量調整</h2>
-  <p class="main">此實驗需要你聆聽並且辨識台語字詞，請在安靜不會被打擾的環境進行，並且建議戴耳機</p>
+  <p class="main">此實驗需要你聆聽並且辨識台語字詞，請在安靜不會被打擾的環境進行，並且建議戴耳機。使用 iPhone 的話，請記得關閉靜音模式才能聽到聲音。</p>
   <p>請播放此聲音檔案，調整音量到可以清楚辨識的程度</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
     <button class="btn btn-outline" onclick="playVolumeCheckAudio()">播放聲音🔊</button>
@@ -271,7 +271,7 @@
   <div id="practice-instruction-text" style="margin-bottom:20px;"></div>
   <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:20px;font-size:14px;">
     <strong>按鍵對應：</strong><br>
-    <span class="key-badge">F</span> = 台語<strong>存在</strong>這個詞&nbsp;&nbsp;
+    <span class="key-badge">F</span> = 台語<strong>存在</strong>這個詞&nbsp;&nbsp;<br />
     <span class="key-badge">J</span> = 台語<strong>不存在</strong>這個詞<br>
     或直接點擊畫面上的按鈕
   </div>
@@ -1032,8 +1032,17 @@ function assignBalancedPrimes(trials) {
     groups.get(groupKey).push(index);
   });
 
-  groups.forEach(indexes => {
-    const assignments = createBalancedPrimeAssignments(indexes.length);
+  const groupIndexesList = [...groups.values()];
+  const extraPrimeAssignments = createBalancedPrimeAssignments(
+    groupIndexesList.filter(indexes => indexes.length % 2 === 1).length
+  );
+  let extraPrimeIndex = 0;
+
+  groupIndexesList.forEach(indexes => {
+    const extraPrime = indexes.length % 2 === 1
+      ? extraPrimeAssignments[extraPrimeIndex++]
+      : null;
+    const assignments = createBalancedPrimeAssignments(indexes.length, extraPrime);
     indexes.forEach((trialIndex, assignmentIndex) => {
       assignedTrials[trialIndex]._primeAssigned = assignments[assignmentIndex];
     });
@@ -1047,7 +1056,7 @@ function getItemGroup(itemId) {
   return match ? match[0] : '';
 }
 
-function createBalancedPrimeAssignments(count) {
+function createBalancedPrimeAssignments(count, extraPrime = null) {
   const half = Math.floor(count / 2);
   const assignments = [
     ...Array(half).fill('A'),
@@ -1055,7 +1064,7 @@ function createBalancedPrimeAssignments(count) {
   ];
 
   if (count % 2 === 1) {
-    assignments.push(Math.random() < 0.5 ? 'A' : 'B');
+    assignments.push(extraPrime || (Math.random() < 0.5 ? 'A' : 'B'));
   }
 
   return shuffle(assignments);
