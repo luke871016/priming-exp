@@ -324,6 +324,15 @@
 
 <!-- ===== 結果頁 ===== -->
 <div id="screen-result" class="card hidden">
+  <div id="result-feedback">
+    <h2>自由留言</h2>
+    <p>實驗已完成。若願意，可以留下任何對本實驗的回饋；此欄位為選填。</p>
+    <div class="form-group">
+      <label for="final-feedback">自由留言</label>
+      <textarea id="final-feedback" rows="5" placeholder="選填：可以寫下任何對本實驗的回饋"></textarea>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="submitFinalFeedback()">送出</button>
+  </div>
   <div id="result-saving" style="text-align:center; padding: 40px 0;">
     <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 16px;"></div>
     <p class="main">資料正在儲存，請不要關閉網頁</p>
@@ -361,6 +370,7 @@ let surveyData = {};
 let sessionId = '';
 let trialResults = [];
 let isSavingResults = false;
+let resultSummary = null;
 
 // RT 計時
 let rtStart = null;
@@ -437,7 +447,7 @@ function goToSurvey() {
 // 受試者基本資料表單
 // ============================================================
 function renderSurveyForm() {
-  const fields = config.survey_fields || defaultSurveyFields();
+  const fields = getSurveyFields();
   const form = document.getElementById('survey-form');
   form.innerHTML = '';
 
@@ -455,6 +465,12 @@ function renderSurveyForm() {
       inp.id = 'survey_' + field.key;
       inp.placeholder = field.placeholder || '';
       group.appendChild(inp);
+    } else if (field.type === 'textarea') {
+      const textarea = document.createElement('textarea');
+      textarea.id = 'survey_' + field.key;
+      textarea.placeholder = field.placeholder || '';
+      textarea.rows = field.rows || 4;
+      group.appendChild(textarea);
     } else if (field.type === 'select') {
       const sel = document.createElement('select');
       sel.id = 'survey_' + field.key;
@@ -484,6 +500,10 @@ function renderSurveyForm() {
   });
 }
 
+function getSurveyFields() {
+  return config.survey_fields || defaultSurveyFields();
+}
+
 function defaultSurveyFields() {
   return [
     { key: 'age', label: '年齡', type: 'number', required: true },
@@ -499,7 +519,7 @@ function defaultSurveyFields() {
 }
 
 function submitSurvey() {
-  const fields = config.survey_fields || defaultSurveyFields();
+  const fields = getSurveyFields();
   const missing = [];
   surveyData = {};
 
@@ -837,16 +857,34 @@ function finishExperiment() {
     ? Math.round(correctTrials.length / trialResults.length * 100)
     : 0;
 
-  showResultSaving();
+  resultSummary = { avgRt, acc };
+  showResultFeedback();
   showScreen('result');
-  saveResultsToSheet({ avgRt, acc });
 }
 
 function clearResultStats() {
   document.getElementById('result-stats').innerHTML = '';
 }
 
+function showResultFeedback() {
+  const feedback = document.getElementById('final-feedback');
+  if (feedback) feedback.value = surveyData.free_feedback || '';
+  document.getElementById('result-feedback').classList.remove('hidden');
+  document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-complete').classList.add('hidden');
+}
+
+function submitFinalFeedback() {
+  if (isSavingResults) return;
+
+  const feedback = document.getElementById('final-feedback');
+  surveyData.free_feedback = feedback ? feedback.value.trim() : '';
+  showResultSaving();
+  saveResultsToSheet(resultSummary || { avgRt: 0, acc: 0 });
+}
+
 function showResultSaving() {
+  document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.remove('hidden');
   document.getElementById('result-complete').classList.add('hidden');
 }
@@ -859,6 +897,7 @@ function showResultComplete(avgRt, acc, savedCount) {
   const status = document.getElementById('saving-status');
   status.textContent = `資料已成功儲存（${savedCount} 筆）`;
   status.style.color = 'var(--success)';
+  document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.add('hidden');
   document.getElementById('result-complete').classList.remove('hidden');
 }
@@ -871,6 +910,7 @@ function showResultSaveError(errorMessage) {
     '請告知實驗者。資料已備份至本機，請先不要清除瀏覽器資料。';
   status.textContent = '錯誤：' + errorMessage;
   status.style.color = 'var(--danger)';
+  document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.add('hidden');
   document.getElementById('result-complete').classList.remove('hidden');
 }

@@ -3,9 +3,9 @@
   {"key": "gender", "label": "性別", "type": "radio",
    "options": ["男", "女", "其他"], "required": true},
   {"key": "family", "label": "家庭台語背景", "type": "select",
-   "options": ["台語是整個家庭的主要語言", "家裡會講台語，但自己只會聽，不太會講", "家中幾乎沒有在使用台語，台語是在外習得"], "required": true},
-  {"key": "taigiability", "label": "台語文能力（口語）", "type": "select",
+   "options": ["台語是家庭裡面的主要語言", "家裡會講台語，但自己只會聽，不太會講", "家中幾乎沒有在使用台語，台語是在外習得"], "required": true},
+  {"key": "listeningability", "label": "台語文能力（口語）", "type": "select",
    "options": ["對話流利", "可溝聽，但不順暢", "聽得懂，但不太會說"], "required": true},
-  {"key": "taigiability", "label": "台語文能力（書面）", "type": "select",
+  {"key": "writingability", "label": "台語文能力（書面）", "type": "select",
    "options": ["能順暢閱讀與書寫台語文", "有大概學過台語文讀寫，但不常實際使用", "從來沒有學過讀寫台語文"], "required": true}
 ]

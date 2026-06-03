@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Priming Experiment 結果分析</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --accent: #2980b9;
+        --red: #c0392b;
+        --green: #1e8449;
+        --orange: #d68910;
+        --light: #f7f9fc;
+        --border: #dde2e8;
+        --text: #2c3e50;
+        --subtext: #5d6d7e;
+        --surface: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: #f4f6f9;
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+      }
+
+      nav .brand {
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 14px 14px 14px 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.18);
+        margin-right: 4px;
+      }
+
+      nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        padding: 14px 11px;
+        font-size: 13px;
+      }
+
+      nav a:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .page-wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 20px 60px;
+      }
+
+      header {
+        padding-top: 24px;
+      }
+
+      section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 28px 0;
+        padding: 28px 32px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      }
+
+      h1 {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--primary);
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 18px;
+      }
+
+      h2 .sec-num {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 4px;
+        padding: 1px 9px;
+        font-size: 12px;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+
+      h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 16px 0 8px;
+      }
+
+      p,
+      .subtext {
+        color: var(--subtext);
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .note {
+        background: #ebf5fb;
+        border-left: 4px solid var(--accent);
+        padding: 10px 16px;
+        border-radius: 0 6px 6px 0;
+        margin: 12px 0;
+        font-size: 13.5px;
+        color: var(--subtext);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        align-items: flex-end;
+        margin: 14px 0 18px;
+      }
+
+      .toolbar label {
+        font-size: 13px;
+        color: var(--subtext);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .toolbar input,
+      .toolbar select {
+        min-width: 180px;
+        max-width: min(620px, 82vw);
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 13px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      button {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      button:hover {
+        filter: brightness(1.08);
+      }
+
+      button.secondary {
+        background: var(--primary);
+      }
+
+      button:disabled {
+        opacity: 0.42;
+        cursor: not-allowed;
+      }
+
+      .stat-grid {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin: 16px 0;
+      }
+
+      .stat-card {
+        background: var(--light);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 20px;
+        min-width: 132px;
+        text-align: center;
+      }
+
+      .stat-card .num {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .stat-card .lbl {
+        font-size: 12px;
+        color: var(--subtext);
+      }
+
+      .chart-wrap {
+        width: 100%;
+        min-height: 310px;
+        margin: 12px 0;
+      }
+
+      .chart-row {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .chart-row .chart-wrap {
+        flex: 1;
+        min-width: 280px;
+      }
+
+      .item-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .report-subsection {
+        margin-top: 22px;
+      }
+
+      .design-overview {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+        margin: 18px 0 8px;
+      }
+
+      .design-matrix-wrap {
+        overflow-x: auto;
+      }
+
+      .design-matrix {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(44, 62, 80, 0.08);
+      }
+
+      .design-matrix th,
+      .design-matrix td {
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 14px;
+        vertical-align: top;
+      }
+
+      .design-matrix tr:last-child th,
+      .design-matrix tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .design-matrix th:last-child,
+      .design-matrix td:last-child {
+        border-right: 0;
+      }
+
+      .design-matrix thead th {
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .design-matrix tbody th {
+        width: 180px;
+        background: #eef1f5;
+        color: var(--primary);
+        font-weight: 700;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      .design-cell {
+        background: linear-gradient(160deg, #fff 0%, var(--light) 100%);
+        text-align: center;
+      }
+
+      .design-cell .group-code {
+        display: block;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .design-cell .group-title {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .design-cell .group-desc {
+        color: var(--subtext);
+        font-size: 12px;
+        margin-top: 6px;
+      }
+
+      .nested-prime-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid rgba(44, 62, 80, 0.48);
+        background: #fff;
+        margin: 0 auto;
+        max-width: 320px;
+      }
+
+      .nested-prime-cell {
+        padding: 12px 10px;
+        min-height: 72px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .nested-prime-cell + .nested-prime-cell {
+        border-left: 1px solid rgba(44, 62, 80, 0.48);
+      }
+
+      .nested-prime-cell .prime-label {
+        color: var(--primary);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .nested-prime-cell .prime-relation {
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.25;
+        margin-top: 2px;
+      }
+
+      .browse-nav-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px 12px;
+        margin: 12px 0 16px;
+      }
+
+      .browse-nav-btn {
+        min-width: 40px;
+        height: 36px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--primary);
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .browse-nav-btn:hover:not(:disabled) {
+        background: var(--light);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .browse-nav-center {
+        flex: 1;
+        min-width: 180px;
+      }
+
+      .browse-nav-center label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--subtext);
+      }
+
+      .browse-nav-center select {
+        width: 100%;
+        min-width: 240px;
+        max-width: 100%;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 13px;
+      }
+
+      .item-card,
+      .trial-card {
+        background: linear-gradient(160deg, #fff 0%, var(--light) 100%);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 1px 3px rgba(44, 62, 80, 0.08);
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+      }
+
+      .item-id {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .pill {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #ebf5fb;
+        color: var(--accent);
+        border: 1px solid rgba(41, 128, 185, 0.35);
+        white-space: nowrap;
+      }
+
+      .pill.good {
+        background: rgba(30, 132, 73, 0.12);
+        color: var(--green);
+        border-color: rgba(30, 132, 73, 0.28);
+      }
+
+      .pill.bad {
+        background: rgba(192, 57, 43, 0.1);
+        color: var(--red);
+        border-color: rgba(192, 57, 43, 0.25);
+      }
+
+      .prime-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin: 10px 0;
+      }
+
+      .prime-box {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .prime-box .label {
+        font-size: 11px;
+        color: var(--subtext);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .prime-box .text {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--text);
+        margin-top: 2px;
+        word-break: break-word;
+      }
+
+      audio {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .subject-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin: 12px 0 18px;
+      }
+
+      .subject-metric {
+        background: var(--light);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+
+      .subject-metric .value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .subject-metric .label {
+        font-size: 12px;
+        color: var(--subtext);
+      }
+
+      .survey-answer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+        margin: 12px 0 18px;
+      }
+
+      .survey-answer-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      .survey-answer-card .label {
+        color: var(--subtext);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .survey-answer-card .value {
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      .trial-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .trial-group-heading {
+        grid-column: 1 / -1;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 8px;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .trial-card {
+        padding: 11px 12px;
+        border-left: 5px solid var(--border);
+      }
+
+      .trial-card.ok {
+        border-left-color: var(--green);
+      }
+
+      .trial-card.bad {
+        border-left-color: var(--red);
+      }
+
+      .trial-card.timeout {
+        border-left-color: var(--orange);
+      }
+
+      .trial-title {
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .trial-meta {
+        color: var(--subtext);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .rt-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #e8ecf1;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .rt-fill {
+        height: 100%;
+        min-width: 2px;
+        max-width: 100%;
+        background: var(--accent);
+      }
+
+      .data-table-wrap {
+        overflow-x: auto;
+        margin: 12px 0;
+      }
+
+      table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      table.data-table th {
+        background: var(--primary);
+        color: #fff;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      table.data-table td {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+      }
+
+      table.data-table tbody tr:nth-child(even) {
+        background: var(--light);
+      }
+
+      .status-line {
+        color: var(--subtext);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      .error {
+        color: var(--red);
+      }
+
+      @media (max-width: 720px) {
+        section {
+          padding: 22px 18px;
+        }
+
+        nav {
+          align-items: stretch;
+        }
+
+        nav .brand {
+          width: 100%;
+          border-right: 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+          padding-bottom: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <span class="brand">Priming Experiment</span>
+      <a href="#sec-load">資料來源</a>
+      <a href="#sec-participants">受試者統計</a>
+      <a href="#sec-items">題目設計檢視</a>
+      <a href="#sec-subject">單一受試者</a>
+    </nav>
+
+    <div class="page-wrap">
+      <header>
+        <h1>華語 Prime 與台語聽覺詞彙辨識實驗結果分析</h1>
+        <p class="subtext">此報表直接連線 Google Apps Script，讀取 Google Sheet 中最新的題目與作答結果。</p>
+      </header>
+
+      <section id="sec-load">
+        <h2><span class="sec-num">1</span>資料來源</h2>
+        <p class="subtext">預設使用實驗頁目前的 GAS Web App URL。若重新部署 GAS，請在下方貼上新的 Web App URL 後重新載入。</p>
+        <div class="toolbar">
+          <label>
+            GAS Web App URL
+            <input id="gas-url" type="url" />
+          </label>
+          <button type="button" id="btn-load">載入最新資料</button>
+          <button type="button" class="secondary" id="btn-reset-url">恢復預設 URL</button>
+        </div>
+        <div id="load-status" class="status-line">尚未載入。</div>
+      </section>
+
+      <section id="sec-participants">
+        <h2><span class="sec-num">2</span>受試者統計</h2>
+        <div id="summary-cards"></div>
+        <div class="chart-wrap" id="chart-age"></div>
+        <div class="chart-row">
+          <div class="chart-wrap" id="chart-gender"></div>
+          <div class="chart-wrap" id="chart-oral"></div>
+          <div class="chart-wrap" id="chart-written"></div>
+        </div>
+      </section>
+
+      <section id="sec-items">
+        <h2><span class="sec-num">3</span>題目設計檢視</h2>
+        <p class="subtext">本實驗以華文 Prime 與台語 Target 的真假詞屬性形成 A–D 四組；每組再依華文 Prime 與台語 Target 的語音是否接近，分成 Prime A / Prime B 兩種條件。</p>
+        <div class="design-overview" aria-label="題目設計矩陣">
+          <div class="design-matrix-wrap">
+            <table class="design-matrix">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>台語 Target（真詞）</th>
+                  <th>台語 Target（假詞）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>華文 Prime（真詞）</th>
+                  <td class="design-cell">
+                    <span class="group-code">A 組</span>
+                    <div class="nested-prime-grid" aria-label="A 組 Prime 條件">
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime A</div>
+                        <div class="prime-relation">諧音</div>
+                      </div>
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime B</div>
+                        <div class="prime-relation">無諧音</div>
+                      </div>
+                    </div>
+                    <div class="group-desc">華文真詞 prime × 台語真詞 target</div>
+                  </td>
+                  <td class="design-cell">
+                    <span class="group-code">C 組</span>
+                    <div class="nested-prime-grid" aria-label="C 組 Prime 條件">
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime A</div>
+                        <div class="prime-relation">諧音</div>
+                      </div>
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime B</div>
+                        <div class="prime-relation">無諧音</div>
+                      </div>
+                    </div>
+                    <div class="group-desc">華文真詞 prime × 台語假詞 target</div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>華文 Prime（假詞）</th>
+                  <td class="design-cell">
+                    <span class="group-code">B 組</span>
+                    <div class="nested-prime-grid" aria-label="B 組 Prime 條件">
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime A</div>
+                        <div class="prime-relation">諧音</div>
+                      </div>
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime B</div>
+                        <div class="prime-relation">無諧音</div>
+                      </div>
+                    </div>
+                    <div class="group-desc">華文假詞 prime × 台語真詞 target</div>
+                  </td>
+                  <td class="design-cell">
+                    <span class="group-code">D 組</span>
+                    <div class="nested-prime-grid" aria-label="D 組 Prime 條件">
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime A</div>
+                        <div class="prime-relation">諧音</div>
+                      </div>
+                      <div class="nested-prime-cell">
+                        <div class="prime-label">Prime B</div>
+                        <div class="prime-relation">無諧音</div>
+                      </div>
+                    </div>
+                    <div class="group-desc">華文假詞 prime × 台語假詞 target</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-subsection">
+          <h3>練習題（P 組）</h3>
+          <div id="practice-item-cards" class="item-grid"></div>
+        </div>
+        <div class="report-subsection">
+          <h3>正式題目（A–D 組）</h3>
+          <div class="browse-nav-row">
+            <button type="button" id="formal-group-prev" class="browse-nav-btn" aria-label="上一組" title="上一組">‹</button>
+            <div class="browse-nav-center">
+              <label>
+                選擇組別
+                <select id="formal-group-select"></select>
+              </label>
+            </div>
+            <button type="button" id="formal-group-next" class="browse-nav-btn" aria-label="下一組" title="下一組">›</button>
+          </div>
+          <div id="formal-item-cards" class="item-grid"></div>
+        </div>
+      </section>
+
+      <section id="sec-subject">
+        <h2><span class="sec-num">4</span>單一受試者資料檢視</h2>
+        <p class="subtext">選擇一位受試者後，可檢視該受試者正式試次的平均 RT、正確率，以及每題被分配到的 prime、RT 與回答正確性。</p>
+        <div class="toolbar">
+          <button type="button" id="subject-prev" class="browse-nav-btn" aria-label="上一位受試者" title="上一位受試者">‹</button>
+          <label>
+            受試者
+            <select id="subject-select"></select>
+          </label>
+          <button type="button" id="subject-next" class="browse-nav-btn" aria-label="下一位受試者" title="下一位受試者">›</button>
+          <button type="button" class="secondary" id="subject-random">隨機抽一位</button>
+          <label>
+            試次
+            <select id="subject-trial-type">
+              <option value="experiment">正式試次</option>
+              <option value="practice">練習試次</option>
+              <option value="all">全部</option>
+            </select>
+          </label>
+          <label>
+            檢視模式
+            <select id="subject-view-mode">
+              <option value="order">按照回答順序檢視</option>
+              <option value="group">按照題目分組檢視</option>
+            </select>
+          </label>
+        </div>
+        <div id="subject-survey"></div>
+        <div id="subject-summary"></div>
+        <div class="chart-row">
+          <div class="chart-wrap" id="chart-subject-overview"></div>
+          <div class="chart-wrap" id="chart-subject-rt"></div>
+        </div>
+        <div id="subject-trials" class="trial-grid"></div>
+      </section>
+    </div>
+
+    <script>
+      "use strict";
+
+      const DEFAULT_GAS_URL =
+        "https://script.google.com/macros/s/AKfycbzB8gAwM0lLUZfAzACO9TmMeaMNPwAeBG4yH7RzRtB88CSrWm7qOhV5k72Fw4Pqmu7t/exec";
+      const GAS_URL_STORAGE_KEY = "primingReportGasUrlV1";
+
+      const DESIGN_GROUP_META = {
+        A: {
+          label: "A 組",
+          primeLexicality: "華文 Prime（真詞）",
+          targetLexicality: "台語 Target（真詞）",
+          short: "華文真詞 × 台語真詞",
+        },
+        B: {
+          label: "B 組",
+          primeLexicality: "華文 Prime（假詞）",
+          targetLexicality: "台語 Target（真詞）",
+          short: "華文假詞 × 台語真詞",
+        },
+        C: {
+          label: "C 組",
+          primeLexicality: "華文 Prime（真詞）",
+          targetLexicality: "台語 Target（假詞）",
+          short: "華文真詞 × 台語假詞",
+        },
+        D: {
+          label: "D 組",
+          primeLexicality: "華文 Prime（假詞）",
+          targetLexicality: "台語 Target（假詞）",
+          short: "華文假詞 × 台語假詞",
+        },
+      };
+
+      const state = {
+        config: {},
+        trials: [],
+        results: [],
+        subjects: [],
+        trialMap: new Map(),
+      };
+
+      const plotlyLayoutBase = {
+        font: {
+          family: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif',
+          size: 12,
+        },
+        margin: { t: 42, r: 20, b: 52, l: 56 },
+        paper_bgcolor: "#fff",
+        plot_bgcolor: "#f7f9fc",
+        colorway: ["#2980b9", "#1e8449", "#d68910", "#c0392b"],
+      };
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function trimStr(value) {
+        if (value === undefined || value === null) return "";
+        return String(value).trim();
+      }
+
+      function parseNum(value) {
+        if (value === undefined || value === null || value === "") return NaN;
+        const n = Number(String(value).trim());
+        return Number.isFinite(n) ? n : NaN;
+      }
+
+      function mean(values) {
+        const arr = values.filter(Number.isFinite);
+        if (!arr.length) return NaN;
+        return arr.reduce((s, v) => s + v, 0) / arr.length;
+      }
+
+      function pct(value) {
+        if (!Number.isFinite(value)) return "—";
+        return (value * 100).toFixed(1) + "%";
+      }
+
+      function fmtMs(value) {
+        if (!Number.isFinite(value)) return "—";
+        return Math.round(value) + " ms";
+      }
+
+      function parseBool(value) {
+        if (value === true || value === 1) return true;
+        if (value === false || value === 0) return false;
+        const s = trimStr(value).toLowerCase();
+        if (["true", "1", "yes", "y"].includes(s)) return true;
+        if (["false", "0", "no", "n"].includes(s)) return false;
+        return null;
+      }
+
+      function normalizeResultRow(row) {
+        const out = { ...row };
+        if (typeof out.survey_data === "string") {
+          try {
+            out.survey_data = JSON.parse(out.survey_data);
+          } catch (_err) {
+            out.survey_data = {};
+          }
+        }
+        if (!out.survey_data || typeof out.survey_data !== "object") out.survey_data = {};
+        out.rt_ms = parseNum(out.rt_ms);
+        out.accuracy = parseNum(out.accuracy);
+        out.trial_index = parseNum(out.trial_index);
+        out.correct_answer = parseBool(out.correct_answer);
+        out.response = parseBool(out.response);
+        out.timed_out = parseBool(out.timed_out);
+        return out;
+      }
+
+      function groupBy(items, keyFn) {
+        const map = new Map();
+        items.forEach((item) => {
+          const key = keyFn(item);
+          if (!map.has(key)) map.set(key, []);
+          map.get(key).push(item);
+        });
+        return map;
+      }
+
+      function getSurveyValue(survey, candidates) {
+        for (let i = 0; i < candidates.length; i++) {
+          const key = candidates[i];
+          const value = trimStr(survey[key]);
+          if (value) return value;
+        }
+        return "";
+      }
+
+      function getAge(survey) {
+        return parseNum(getSurveyValue(survey, ["age", "年齡"]));
+      }
+
+      function getGender(survey) {
+        const value = getSurveyValue(survey, ["gender", "sex", "性別"]);
+        if (!value) return "未填";
+        if (/^男|male|^m$/i.test(value)) return "男";
+        if (/^女|female|^f$/i.test(value)) return "女";
+        return value;
+      }
+
+      function getOralLevel(survey) {
+        return (
+          getSurveyValue(survey, [
+            "listeningability",
+            "taigi_oral",
+            "taiwanese_oral",
+            "oral_taigi",
+            "taigi_speaking",
+            "spoken_taiwanese",
+            "taigiability_oral",
+            "taigiability",
+          ]) || "未填"
+        );
+      }
+
+      function getWrittenLevel(survey) {
+        return (
+          getSurveyValue(survey, [
+            "writingability",
+            "taigi_written",
+            "taiwanese_written",
+            "written_taigi",
+            "taigi_writing",
+            "taigi_literacy",
+            "taigiability_written",
+          ]) || "未填"
+        );
+      }
+
+      function resultSubjectKey(row) {
+        return trimStr(row.session_id) || trimStr(row.participant_id) || "unknown";
+      }
+
+      function buildSubjects(results) {
+        const grouped = groupBy(results, resultSubjectKey);
+        const subjects = [];
+        grouped.forEach((rows, key) => {
+          rows.sort((a, b) => {
+            const ta = trimStr(a.timestamp);
+            const tb = trimStr(b.timestamp);
+            if (ta !== tb) return ta.localeCompare(tb);
+            return (a.trial_index || 0) - (b.trial_index || 0);
+          });
+          const first = rows[0] || {};
+          const survey = first.survey_data || {};
+          const experimentRows = rows.filter((r) => trimStr(r.type) === "experiment");
+          const rowsForStats = experimentRows.length ? experimentRows : rows;
+          const responded = rowsForStats.filter((r) => Number.isFinite(r.rt_ms));
+          const accRows = rowsForStats.filter((r) => Number.isFinite(r.accuracy));
+          subjects.push({
+            key,
+            participantId: trimStr(first.participant_id) || key,
+            sessionId: trimStr(first.session_id) || key,
+            timestamp: trimStr(first.timestamp),
+            survey,
+            rows,
+            experimentRows,
+            trialCount: rowsForStats.length,
+            avgRt: mean(responded.map((r) => r.rt_ms)),
+            accuracy: mean(accRows.map((r) => r.accuracy)),
+          });
+        });
+        subjects.sort((a, b) => {
+          const ta = a.timestamp || "";
+          const tb = b.timestamp || "";
+          if (ta !== tb) return ta.localeCompare(tb);
+          return a.participantId.localeCompare(b.participantId, "zh-Hant");
+        });
+        return subjects;
+      }
+
+      function buildTrialMap(trials) {
+        const map = new Map();
+        trials.forEach((trial) => {
+          const key = trimStr(trial.item_id);
+          if (key) map.set(key, trial);
+        });
+        return map;
+      }
+
+      function itemPrefix(itemId) {
+        const s = trimStr(itemId);
+        const m = s.match(/^[^\d_-]+/);
+        return m ? m[0] : "其他";
+      }
+
+      function itemDesignGroup(trial) {
+        const prefix = itemPrefix(trial.item_id).toUpperCase();
+        if (/^[ABCD]$/.test(prefix)) return prefix;
+        return prefix || "其他";
+      }
+
+      function groupOrderValue(group) {
+        const order = ["A", "B", "C", "D", "其他"];
+        const idx = order.indexOf(group);
+        return idx >= 0 ? idx : order.length;
+      }
+
+      function designGroupMeta(group) {
+        return DESIGN_GROUP_META[group] || {
+          label: group ? group + " 組" : "其他",
+          primeLexicality: "華文 Prime（未分類）",
+          targetLexicality: "台語 Target（未分類）",
+          short: "未依 A–D 設計分類",
+        };
+      }
+
+      function designGroupOptionText(group) {
+        const meta = designGroupMeta(group);
+        return meta.label + "：" + meta.short;
+      }
+
+      function countMap(values) {
+        const map = new Map();
+        values.forEach((value) => {
+          const key = trimStr(value) || "未填";
+          map.set(key, (map.get(key) || 0) + 1);
+        });
+        return map;
+      }
+
+      function sortedCountEntries(values) {
+        return Array.from(countMap(values).entries()).sort((a, b) =>
+          String(a[0]).localeCompare(String(b[0]), "zh-Hant"),
+        );
+      }
+
+      function renderStatCards(stats) {
+        $("summary-cards").innerHTML =
+          '<div class="stat-grid">' +
+          statCard(stats.subjects, "受試者人數") +
+          statCard(stats.resultRows, "結果列數") +
+          statCard(stats.experimentRows, "正式試次列數") +
+          statCard(stats.meanRt, "平均 RT") +
+          statCard(stats.accuracy, "整體正確率") +
+          "</div>";
+      }
+
+      function statCard(num, label) {
+        return '<div class="stat-card"><div class="num">' + num + '</div><div class="lbl">' + label + "</div></div>";
+      }
+
+      function plotCounts(elId, entries, title) {
+        const el = $(elId);
+        const labels = entries.map((x) => x[0]);
+        const values = entries.map((x) => x[1]);
+        Plotly.react(
+          el,
+          [
+            {
+              type: "bar",
+              x: labels,
+              y: values,
+              marker: { color: "#2980b9" },
+              text: values.map(String),
+              textposition: "outside",
+              cliponaxis: false,
+            },
+          ],
+          {
+            ...plotlyLayoutBase,
+            title: { text: title },
+            xaxis: { title: "回答" },
+            yaxis: { title: "人數", rangemode: "tozero" },
+          },
+          { responsive: true },
+        );
+      }
+
+      function plotAge(subjects) {
+        const ages = subjects.map((s) => getAge(s.survey)).filter((x) => Number.isFinite(x) && x > 0 && x < 120);
+        if (!ages.length) {
+          Plotly.react(
+            $("chart-age"),
+            [],
+            {
+              ...plotlyLayoutBase,
+              title: { text: "年齡分布（尚無有效年齡）" },
+              annotations: [{ text: "無可繪製的年齡資料", x: 0.5, y: 0.5, xref: "paper", yref: "paper", showarrow: false }],
+            },
+            { responsive: true },
+          );
+          return;
+        }
+        Plotly.react(
+          $("chart-age"),
+          [{ type: "histogram", x: ages, marker: { color: "#2980b9" }, nbinsx: Math.min(12, Math.max(5, Math.ceil(ages.length / 2))) }],
+          {
+            ...plotlyLayoutBase,
+            title: { text: "年齡分布" },
+            xaxis: { title: "年齡" },
+            yaxis: { title: "人數" },
+          },
+          { responsive: true },
+        );
+      }
+
+      function renderParticipants() {
+        const subjects = state.subjects;
+        const experimentRows = state.results.filter((r) => trimStr(r.type) === "experiment");
+        const rtRows = experimentRows.filter((r) => Number.isFinite(r.rt_ms));
+        const accRows = experimentRows.filter((r) => Number.isFinite(r.accuracy));
+        renderStatCards({
+          subjects: subjects.length,
+          resultRows: state.results.length,
+          experimentRows: experimentRows.length,
+          meanRt: fmtMs(mean(rtRows.map((r) => r.rt_ms))),
+          accuracy: pct(mean(accRows.map((r) => r.accuracy))),
+        });
+
+        plotAge(subjects);
+        plotCounts("chart-gender", sortedCountEntries(subjects.map((s) => getGender(s.survey))), "性別");
+        plotCounts("chart-oral", sortedCountEntries(subjects.map((s) => getOralLevel(s.survey))), "台語口語程度");
+        plotCounts("chart-written", sortedCountEntries(subjects.map((s) => getWrittenLevel(s.survey))), "台語書面程度");
+      }
+
+      function refreshItemSections() {
+        renderPracticeItems();
+        refreshFormalGroups();
+      }
+
+      function refreshFormalGroups() {
+        const sel = $("formal-group-select");
+        const groups = Array.from(
+          new Set(
+            state.trials
+              .filter((trial) => trimStr(trial.type) === "experiment")
+              .map(itemDesignGroup),
+          ),
+        ).sort((a, b) => {
+          const oa = groupOrderValue(a);
+          const ob = groupOrderValue(b);
+          if (oa !== ob) return oa - ob;
+          return a.localeCompare(b, "zh-Hant");
+        });
+        sel.innerHTML = "";
+        groups.forEach((group) => {
+          const opt = document.createElement("option");
+          opt.value = group;
+          opt.textContent = designGroupOptionText(group);
+          sel.appendChild(opt);
+        });
+        $("formal-group-prev").disabled = groups.length <= 1;
+        $("formal-group-next").disabled = groups.length <= 1;
+        renderFormalItems();
+      }
+
+      function moveFormalGroup(delta) {
+        const sel = $("formal-group-select");
+        const n = sel.options.length;
+        if (n <= 1) return;
+        const next = (sel.selectedIndex + delta + n) % n;
+        sel.selectedIndex = next;
+        renderFormalItems();
+      }
+
+      function renderPracticeItems() {
+        const rows = state.trials
+          .filter((trial) => trimStr(trial.type) === "practice")
+          .slice()
+          .sort(sortTrialsByItemId);
+        renderItemCards($("practice-item-cards"), rows, "目前沒有 practice / P 組練習題。");
+      }
+
+      function renderFormalItems() {
+        const currentGroup = $("formal-group-select").value;
+        const rows = state.trials
+          .filter((trial) => trimStr(trial.type) === "experiment")
+          .filter((trial) => itemDesignGroup(trial) === currentGroup)
+          .slice()
+          .sort(sortTrialsByItemId);
+        renderItemCards($("formal-item-cards"), rows, "目前沒有此組正式題目。");
+      }
+
+      function sortTrialsByItemId(a, b) {
+        return trimStr(a.item_id).localeCompare(trimStr(b.item_id), "zh-Hant", { numeric: true });
+      }
+
+      function renderItemCards(host, rows, emptyMessage) {
+        host.innerHTML = "";
+
+        if (!rows.length) {
+          host.innerHTML = '<p class="subtext">' + escapeHtml(emptyMessage) + "</p>";
+          return;
+        }
+
+        rows.forEach((trial) => {
+          const card = document.createElement("article");
+          card.className = "item-card";
+          const answer = parseBool(trial.answer);
+          const group = trimStr(trial.type) === "experiment" ? itemDesignGroup(trial) : "P";
+          const meta = group === "P"
+            ? { label: "P 組", short: "練習題", primeLexicality: "練習題", targetLexicality: "練習題" }
+            : designGroupMeta(group);
+          card.innerHTML =
+            '<div class="item-head"><div><div class="item-id">' +
+            escapeHtml(trimStr(trial.item_id) || "未命名題目") +
+            '</div><div class="subtext">' +
+            escapeHtml(trimStr(trial.notes) || "無 notes") +
+            '</div><div class="subtext"><strong>' +
+            escapeHtml(meta.label) +
+            "</strong>：" +
+            escapeHtml(meta.short) +
+            '</div></div><span class="pill ' +
+            (answer === true ? "good" : answer === false ? "bad" : "") +
+            '">' +
+            (answer === true ? "真詞" : answer === false ? "非詞" : "答案未定") +
+            "</span></div>" +
+            '<div class="prime-pair"><div class="prime-box"><div class="label">Prime A 諧音</div><div class="text">' +
+            escapeHtml(trimStr(trial.prime_a) || "—") +
+            '</div></div><div class="prime-box"><div class="label">Prime B 無諧音</div><div class="text">' +
+            escapeHtml(trimStr(trial.prime_b) || "—") +
+            "</div></div></div>";
+
+          if (trimStr(trial.target_url)) {
+            const audio = document.createElement("audio");
+            audio.controls = true;
+            audio.preload = "none";
+            audio.src = trimStr(trial.target_url);
+            card.appendChild(audio);
+          }
+          host.appendChild(card);
+        });
+      }
+
+      function fillSubjectSelect() {
+        const sel = $("subject-select");
+        sel.innerHTML = "";
+        state.subjects.forEach((subject, index) => {
+          const opt = document.createElement("option");
+          opt.value = subject.key;
+          opt.textContent = `${index + 1}. ${subject.participantId}`;
+          sel.appendChild(opt);
+        });
+        syncSubjectNavButtons();
+      }
+
+      function syncSubjectNavButtons() {
+        const disabled = state.subjects.length <= 1;
+        $("subject-prev").disabled = disabled;
+        $("subject-next").disabled = disabled;
+        $("subject-random").disabled = disabled;
+      }
+
+      function moveSubject(delta) {
+        const sel = $("subject-select");
+        const n = sel.options.length;
+        if (n <= 1) return;
+        sel.selectedIndex = (sel.selectedIndex + delta + n) % n;
+        renderSubject();
+      }
+
+      function randomSubject() {
+        const sel = $("subject-select");
+        const n = sel.options.length;
+        if (n <= 1) return;
+        let next = sel.selectedIndex;
+        for (let i = 0; i < 12; i++) {
+          next = Math.floor(Math.random() * n);
+          if (next !== sel.selectedIndex) break;
+        }
+        sel.selectedIndex = next;
+        renderSubject();
+      }
+
+      function selectedSubjectRows(subject) {
+        const type = $("subject-trial-type").value;
+        if (type === "all") return subject.rows;
+        return subject.rows.filter((row) => trimStr(row.type) === type);
+      }
+
+      function sortSubjectRows(rows) {
+        const viewMode = $("subject-view-mode").value;
+        const sorted = rows.slice();
+        if (viewMode === "group") {
+          sorted.sort((a, b) => {
+            const ga = itemDesignGroup(state.trialMap.get(trimStr(a.item_id)) || { item_id: a.item_id });
+            const gb = itemDesignGroup(state.trialMap.get(trimStr(b.item_id)) || { item_id: b.item_id });
+            const og = groupOrderValue(ga) - groupOrderValue(gb);
+            if (og !== 0) return og;
+            const cg = ga.localeCompare(gb, "zh-Hant");
+            if (cg !== 0) return cg;
+            return subjectTrialOrder(a) - subjectTrialOrder(b);
+          });
+          return sorted;
+        }
+        sorted.sort((a, b) => subjectTrialOrder(a) - subjectTrialOrder(b));
+        return sorted;
+      }
+
+      function subjectTrialOrder(row) {
+        return Number.isFinite(row.trial_index) ? row.trial_index : 999999;
+      }
+
+      function renderSubject() {
+        const key = $("subject-select").value;
+        const subject = state.subjects.find((s) => s.key === key);
+        const summary = $("subject-summary");
+        const host = $("subject-trials");
+        const surveyHost = $("subject-survey");
+        host.innerHTML = "";
+
+        if (!subject) {
+          surveyHost.innerHTML = "";
+          summary.innerHTML = '<p class="subtext">尚無受試者資料。</p>';
+          Plotly.purge($("chart-subject-overview"));
+          Plotly.purge($("chart-subject-rt"));
+          return;
+        }
+
+        const rows = sortSubjectRows(selectedSubjectRows(subject));
+        const rtRows = rows.filter((r) => Number.isFinite(r.rt_ms));
+        const accRows = rows.filter((r) => Number.isFinite(r.accuracy));
+        const avgRt = mean(rtRows.map((r) => r.rt_ms));
+        const acc = mean(accRows.map((r) => r.accuracy));
+        const correctN = accRows.filter((r) => r.accuracy === 1).length;
+
+        renderSubjectSurvey(subject);
+        summary.innerHTML =
+          '<div class="subject-summary-grid">' +
+          metricCard(subject.participantId, "受試者代碼") +
+          metricCard(rows.length, "顯示試次數") +
+          metricCard(fmtMs(avgRt), "平均 RT") +
+          metricCard(pct(acc), "正確率") +
+          metricCard(correctN + " / " + accRows.length, "正確題數") +
+          "</div>";
+
+        plotSubjectOverview(avgRt, acc);
+        plotSubjectRt(rows);
+        renderSubjectTrialCards(host, rows);
+      }
+
+      function renderSubjectSurvey(subject) {
+        const survey = subject.survey || {};
+        const age = getAge(survey);
+        const cards = [
+          ["受試者代碼", subject.participantId],
+          ["作答時間", subject.timestamp || "—"],
+          ["年齡", Number.isFinite(age) ? String(age) : "—"],
+          ["性別", getGender(survey)],
+          ["家庭台語背景", getSurveyValue(survey, ["family", "家庭台語背景"]) || "未填"],
+          ["台語文能力（口語）", getOralLevel(survey)],
+          ["台語文能力（書面）", getWrittenLevel(survey)],
+        ];
+        let html = "<h3>問卷回答</h3><div class=\"survey-answer-grid\">";
+        cards.forEach(([label, value]) => {
+          html +=
+            '<div class="survey-answer-card"><div class="label">' +
+            escapeHtml(label) +
+            '</div><div class="value">' +
+            escapeHtml(value || "—") +
+            "</div></div>";
+        });
+        html += "</div>";
+        $("subject-survey").innerHTML = html;
+      }
+
+      function metricCard(value, label) {
+        return '<div class="subject-metric"><div class="value">' + escapeHtml(String(value)) + '</div><div class="label">' + label + "</div></div>";
+      }
+
+      function plotSubjectOverview(avgRt, acc) {
+        Plotly.react(
+          $("chart-subject-overview"),
+          [
+            {
+              type: "bar",
+              x: ["平均 RT（秒）", "正確率（%）"],
+              y: [Number.isFinite(avgRt) ? avgRt / 1000 : null, Number.isFinite(acc) ? acc * 100 : null],
+              marker: { color: ["#2980b9", "#1e8449"] },
+              text: [fmtMs(avgRt), pct(acc)],
+              textposition: "outside",
+              cliponaxis: false,
+            },
+          ],
+          {
+            ...plotlyLayoutBase,
+            title: { text: "單一受試者摘要" },
+            yaxis: { title: "數值", rangemode: "tozero" },
+          },
+          { responsive: true },
+        );
+      }
+
+      function plotSubjectRt(rows) {
+        const points = rows.map((row, i) => ({
+          x: i + 1,
+          y: Number.isFinite(row.rt_ms) ? row.rt_ms : null,
+          item: trimStr(row.item_id),
+          ok: row.accuracy === 1,
+        }));
+        Plotly.react(
+          $("chart-subject-rt"),
+          [
+            {
+              type: "scatter",
+              mode: "markers+lines",
+              x: points.map((p) => p.x),
+              y: points.map((p) => p.y),
+              text: points.map((p) => p.item),
+              marker: { color: points.map((p) => (p.ok ? "#1e8449" : "#c0392b")), size: 8 },
+              hovertemplate: "第 %{x} 題<br>%{text}<br>RT %{y:.0f} ms<extra></extra>",
+            },
+          ],
+          {
+            ...plotlyLayoutBase,
+            title: { text: "逐題 RT" },
+            xaxis: { title: "呈現順序" },
+            yaxis: { title: "RT（ms）", rangemode: "tozero" },
+          },
+          { responsive: true },
+        );
+      }
+
+      function renderSubjectTrialCards(host, rows) {
+        const maxRt = Math.max(1000, ...rows.map((r) => (Number.isFinite(r.rt_ms) ? r.rt_ms : 0)));
+        if (!rows.length) {
+          host.innerHTML = '<p class="subtext">此受試者在目前篩選條件下沒有試次。</p>';
+          return;
+        }
+
+        let lastGroup = "";
+        const showGroupHeadings = $("subject-view-mode").value === "group";
+        rows.forEach((row) => {
+          const trial = state.trialMap.get(trimStr(row.item_id));
+          const group = itemDesignGroup(trial || { item_id: row.item_id });
+          if (showGroupHeadings && group !== lastGroup) {
+            lastGroup = group;
+            const heading = document.createElement("div");
+            heading.className = "trial-group-heading";
+            heading.textContent = designGroupOptionText(group);
+            host.appendChild(heading);
+          }
+          const card = document.createElement("article");
+          const timedOut = row.timed_out === true || !Number.isFinite(row.rt_ms);
+          const ok = row.accuracy === 1;
+          card.className = "trial-card " + (timedOut ? "timeout" : ok ? "ok" : "bad");
+          const rt = Number.isFinite(row.rt_ms) ? row.rt_ms : NaN;
+          const rtPct = Number.isFinite(rt) && maxRt > 0 ? Math.min(100, (rt / maxRt) * 100) : 0;
+          card.innerHTML =
+            '<div class="trial-title"><span>' +
+            escapeHtml(trimStr(row.item_id) || "未命名") +
+            '</span><span class="pill ' +
+            (ok ? "good" : "bad") +
+            '">' +
+            (timedOut ? "逾時" : ok ? "正確" : "錯誤") +
+            "</span></div>" +
+            '<div class="trial-meta">Prime ' +
+            escapeHtml(trimStr(row.prime_assigned) || "—") +
+            "：" +
+            escapeHtml(trimStr(row.prime_text) || "—") +
+            "</div>" +
+            '<div class="trial-meta">RT：' +
+            fmtMs(rt) +
+            "；回答：" +
+            responseText(row.response) +
+            "；正解：" +
+            responseText(row.correct_answer) +
+            "</div>" +
+            '<div class="trial-meta">題目分組：' +
+            escapeHtml(designGroupOptionText(group)) +
+            "</div>" +
+            '<div class="trial-meta">Target：' +
+            escapeHtml(trimStr(trial && trial.notes ? trial.notes : row.notes) || "—") +
+            "</div>" +
+            '<div class="rt-track"><div class="rt-fill" style="width:' +
+            rtPct.toFixed(1) +
+            '%"></div></div>';
+          host.appendChild(card);
+        });
+      }
+
+      function responseText(value) {
+        if (value === true) return "真詞";
+        if (value === false) return "非詞";
+        return "未答";
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function fetchJson(url) {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (data && data.error) throw new Error(data.error);
+        return data;
+      }
+
+      async function loadData() {
+        const gasUrl = trimStr($("gas-url").value);
+        if (!gasUrl) {
+          $("load-status").innerHTML = '<span class="error">請先輸入 GAS Web App URL。</span>';
+          return;
+        }
+        localStorage.setItem(GAS_URL_STORAGE_KEY, gasUrl);
+        $("load-status").textContent = "載入中...";
+
+        try {
+          const [configData, trialsData, resultsData] = await Promise.all([
+            fetchJson(gasUrl + "?action=getConfig"),
+            fetchJson(gasUrl + "?action=getTrials"),
+            fetchJson(gasUrl + "?action=getResults"),
+          ]);
+
+          state.config = configData.config || {};
+          state.trials = Array.isArray(trialsData.trials) ? trialsData.trials : [];
+          state.results = (Array.isArray(resultsData.results) ? resultsData.results : []).map(normalizeResultRow);
+          state.trialMap = buildTrialMap(state.trials);
+          state.subjects = buildSubjects(state.results);
+
+          renderParticipants();
+          refreshItemSections();
+          fillSubjectSelect();
+          renderSubject();
+
+          $("load-status").textContent =
+            "已載入 " +
+            state.trials.length +
+            " 題、" +
+            state.results.length +
+            " 筆結果列、" +
+            state.subjects.length +
+            " 位受試者。";
+        } catch (err) {
+          $("load-status").innerHTML =
+            '<span class="error">載入失敗：' +
+            escapeHtml(err && err.message ? err.message : String(err)) +
+            "。若剛修改 code.gs，請重新部署 GAS Web App。</span>";
+        }
+      }
+
+      function init() {
+        $("gas-url").value = localStorage.getItem(GAS_URL_STORAGE_KEY) || DEFAULT_GAS_URL;
+        $("btn-load").addEventListener("click", loadData);
+        $("btn-reset-url").addEventListener("click", () => {
+          $("gas-url").value = DEFAULT_GAS_URL;
+          localStorage.removeItem(GAS_URL_STORAGE_KEY);
+          loadData();
+        });
+        $("formal-group-prev").addEventListener("click", () => moveFormalGroup(-1));
+        $("formal-group-next").addEventListener("click", () => moveFormalGroup(1));
+        $("formal-group-select").addEventListener("change", renderFormalItems);
+        $("subject-prev").addEventListener("click", () => moveSubject(-1));
+        $("subject-next").addEventListener("click", () => moveSubject(1));
+        $("subject-random").addEventListener("click", randomSubject);
+        $("subject-select").addEventListener("change", renderSubject);
+        $("subject-trial-type").addEventListener("change", renderSubject);
+        $("subject-view-mode").addEventListener("change", renderSubject);
+        loadData();
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
