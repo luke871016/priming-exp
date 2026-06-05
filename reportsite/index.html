@@ -424,6 +424,14 @@
         box-shadow: 0 1px 3px rgba(44, 62, 80, 0.08);
       }
 
+      .item-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        overflow: hidden;
+        padding: 0;
+      }
+
       .item-head {
         display: flex;
         justify-content: space-between;
@@ -433,9 +441,95 @@
       }
 
       .item-id {
-        font-size: 17px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 400;
         color: var(--primary);
+        line-height: 1.35;
+      }
+
+      .target-panel,
+      .prime-panel {
+        padding: 14px;
+      }
+
+      .target-panel {
+        background: #fff;
+        border-bottom: 1px solid rgba(44, 62, 80, 0.16);
+      }
+
+      .target-section-label,
+      .prime-section-label {
+        color: var(--subtext);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .target-main {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-top: 4px;
+      }
+
+      .target-spoken-row {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .target-spoken-text {
+        color: var(--text);
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.45;
+        word-break: break-word;
+      }
+
+      .target-audio {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .target-audio:empty {
+        display: none;
+      }
+
+      .target-play-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 1px solid rgba(41, 128, 185, 0.35);
+        border-radius: 50%;
+        background: #ebf5fb;
+        color: var(--accent);
+        appearance: none;
+      }
+
+      .target-play-btn:hover {
+        background: #d8ecf8;
+      }
+
+      .target-play-btn::before {
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        margin-left: 2px;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 9px solid currentColor;
+      }
+
+      .prime-panel {
+        background: linear-gradient(160deg, #f7f9fc 0%, #eef4f9 100%);
       }
 
       .pill {
@@ -466,7 +560,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        margin: 10px 0;
+        margin-top: 8px;
       }
 
       .prime-box {
@@ -493,7 +587,6 @@
 
       audio {
         width: 100%;
-        margin-top: 8px;
       }
 
       .subject-summary-grid {
@@ -674,6 +767,7 @@
       <a href="#sec-load">資料來源</a>
       <a href="#sec-participants">受試者統計</a>
       <a href="#sec-items">題目設計檢視</a>
+      <a href="#sec-group-analysis">分題目組別</a>
       <a href="#sec-subject">單一受試者</a>
     </nav>
 
@@ -808,8 +902,31 @@
         </div>
       </section>
 
+      <section id="sec-group-analysis">
+        <h2><span class="sec-num">4</span>分題目組別分析</h2>
+        <p class="subtext">依正式試次的 A–D 題目組別與實際分配到的 Prime A / Prime B，彙整所有受試者的平均 RT 與正確率。</p>
+        <div class="toolbar">
+          <label>
+            台語口語程度
+            <select id="group-filter-oral">
+              <option value="">全部</option>
+            </select>
+          </label>
+          <label>
+            台語書面程度
+            <select id="group-filter-written">
+              <option value="">全部</option>
+            </select>
+          </label>
+        </div>
+        <div class="chart-row">
+          <div class="chart-wrap" id="chart-group-rt"></div>
+          <div class="chart-wrap" id="chart-group-accuracy"></div>
+        </div>
+      </section>
+
       <section id="sec-subject">
-        <h2><span class="sec-num">4</span>單一受試者資料檢視</h2>
+        <h2><span class="sec-num">5</span>單一受試者資料檢視</h2>
         <p class="subtext">選擇一位受試者後，可檢視該受試者正式試次的平均 RT、正確率，以及每題被分配到的 prime、RT 與回答正確性。</p>
         <div class="toolbar">
           <button type="button" id="subject-prev" class="browse-nav-btn" aria-label="上一位受試者" title="上一位受試者">‹</button>
@@ -1115,6 +1232,12 @@
         );
       }
 
+      function sortedUniqueValues(values) {
+        return Array.from(new Set(values.map((value) => trimStr(value) || "未填"))).sort((a, b) =>
+          a.localeCompare(b, "zh-Hant"),
+        );
+      }
+
       function renderStatCards(stats) {
         $("summary-cards").innerHTML =
           '<div class="stat-grid">' +
@@ -1204,6 +1327,137 @@
         plotCounts("chart-written", sortedCountEntries(subjects.map((s) => getWrittenLevel(s.survey))), "台語書面程度");
       }
 
+      function groupPrimeStats(rows) {
+        const groups = ["A", "B", "C", "D"];
+        const primes = ["A", "B"];
+        const buckets = new Map();
+        groups.forEach((group) => {
+          primes.forEach((prime) => {
+            buckets.set(group + "|" + prime, {
+              group,
+              prime,
+              rtValues: [],
+              accValues: [],
+              n: 0,
+            });
+          });
+        });
+
+        rows
+          .filter((row) => trimStr(row.type) === "experiment")
+          .forEach((row) => {
+            const trial = state.trialMap.get(trimStr(row.item_id)) || { item_id: row.item_id };
+            const group = itemDesignGroup(trial);
+            const prime = trimStr(row.prime_assigned).toUpperCase();
+            const bucket = buckets.get(group + "|" + prime);
+            if (!bucket) return;
+            bucket.n += 1;
+            if (Number.isFinite(row.rt_ms)) bucket.rtValues.push(row.rt_ms);
+            if (Number.isFinite(row.accuracy)) bucket.accValues.push(row.accuracy);
+          });
+
+        return Array.from(buckets.values()).map((bucket) => ({
+          group: bucket.group,
+          prime: bucket.prime,
+          n: bucket.n,
+          avgRt: mean(bucket.rtValues),
+          accuracy: mean(bucket.accValues),
+        }));
+      }
+
+      function fillGroupAnalysisFilters() {
+        fillGroupFilterSelect("group-filter-oral", sortedUniqueValues(state.subjects.map((subject) => getOralLevel(subject.survey))));
+        fillGroupFilterSelect("group-filter-written", sortedUniqueValues(state.subjects.map((subject) => getWrittenLevel(subject.survey))));
+      }
+
+      function fillGroupFilterSelect(elId, values) {
+        const sel = $(elId);
+        const previous = sel.value;
+        sel.innerHTML = '<option value="">全部</option>';
+        values.forEach((value) => {
+          const opt = document.createElement("option");
+          opt.value = value;
+          opt.textContent = value;
+          sel.appendChild(opt);
+        });
+        sel.value = values.includes(previous) ? previous : "";
+      }
+
+      function filteredGroupAnalysisRows() {
+        const oralFilter = $("group-filter-oral").value;
+        const writtenFilter = $("group-filter-written").value;
+        return state.results.filter((row) => {
+          const survey = row.survey_data || {};
+          if (oralFilter && getOralLevel(survey) !== oralFilter) return false;
+          if (writtenFilter && getWrittenLevel(survey) !== writtenFilter) return false;
+          return true;
+        });
+      }
+
+      function renderGroupAnalysis() {
+        const stats = groupPrimeStats(filteredGroupAnalysisRows());
+        const hasAny = stats.some((stat) => stat.n > 0);
+        if (!hasAny) {
+          Plotly.react($("chart-group-rt"), [], { ...plotlyLayoutBase, title: { text: "分題目組別平均 RT（目前篩選無資料）" } }, { responsive: true });
+          Plotly.react($("chart-group-accuracy"), [], { ...plotlyLayoutBase, title: { text: "分題目組別正確率（目前篩選無資料）" } }, { responsive: true });
+          return;
+        }
+
+        plotGroupPrimeMetric("chart-group-rt", stats, {
+          title: "A–D 組 × Prime 平均 RT",
+          valueKey: "avgRt",
+          yTitle: "平均 RT（ms）",
+          textFormatter: fmtMs,
+          hoverFormatter: "%{y:.0f} ms",
+        });
+        plotGroupPrimeMetric("chart-group-accuracy", stats, {
+          title: "A–D 組 × Prime 正確率",
+          valueKey: "accuracy",
+          yTitle: "正確率（%）",
+          valueTransform: (value) => value * 100,
+          textFormatter: pct,
+          hoverFormatter: "%{y:.1f}%",
+        });
+      }
+
+      function plotGroupPrimeMetric(elId, stats, options) {
+        const groups = ["A", "B", "C", "D"];
+        const primes = ["A", "B"];
+        const traces = primes.map((prime) => {
+          const primeStats = groups.map((group) => stats.find((stat) => stat.group === group && stat.prime === prime));
+          const rawValues = primeStats.map((stat) => (stat ? stat[options.valueKey] : NaN));
+          const yValues = rawValues.map((value) => {
+            if (!Number.isFinite(value)) return null;
+            return options.valueTransform ? options.valueTransform(value) : value;
+          });
+          return {
+            type: "bar",
+            name: "Prime " + prime,
+            x: groups.map((group) => group + " 組"),
+            y: yValues,
+            text: rawValues.map((value) => options.textFormatter(value)),
+            textposition: "outside",
+            cliponaxis: false,
+            customdata: primeStats.map((stat) => (stat ? stat.n : 0)),
+            hovertemplate: "%{x}<br>" + "Prime " + prime + "<br>" + options.yTitle + "：" + options.hoverFormatter + "<br>試次數：%{customdata}<extra></extra>",
+          };
+        });
+
+        Plotly.react(
+          $(elId),
+          traces,
+          {
+            ...plotlyLayoutBase,
+            title: { text: options.title },
+            barmode: "group",
+            yaxis: { title: options.yTitle, rangemode: "tozero" },
+            xaxis: { title: "題目組別" },
+            legend: { orientation: "h", y: -0.2 },
+          },
+          { responsive: true },
+        );
+      }
+
       function refreshItemSections() {
         renderPracticeItems();
         refreshFormalGroups();
@@ -1282,32 +1536,55 @@
           const meta = group === "P"
             ? { label: "P 組", short: "練習題", primeLexicality: "練習題", targetLexicality: "練習題" }
             : designGroupMeta(group);
+          const targetText = trimStr(trial.target_text || trial.target || trial.item_id) || "未命名 Target";
+          const spokenTargetText = trimStr(trial.notes) || "—";
+          const designParts = trimStr(meta.short).split(" × ");
+          const primeLexicalityLabel = designParts[0] || trimStr(meta.primeLexicality);
+          const targetLexicalityLabel = designParts[1] || trimStr(meta.targetLexicality);
           card.innerHTML =
-            '<div class="item-head"><div><div class="item-id">' +
-            escapeHtml(trimStr(trial.item_id) || "未命名題目") +
-            '</div><div class="subtext">' +
-            escapeHtml(trimStr(trial.notes) || "無 notes") +
-            '</div><div class="subtext"><strong>' +
-            escapeHtml(meta.label) +
-            "</strong>：" +
-            escapeHtml(meta.short) +
-            '</div></div><span class="pill ' +
+            '<div class="target-panel"><div class="target-section-label">Target · ' +
+            escapeHtml(targetLexicalityLabel) +
+            "</div>" +
+            '<div class="target-main"><div><div class="item-id">' +
+            escapeHtml(targetText) +
+            '</div><div class="target-spoken-row"><div class="target-spoken-text">' +
+            escapeHtml(spokenTargetText) +
+            '</div><span class="target-audio"></span></div></div><span class="pill ' +
             (answer === true ? "good" : answer === false ? "bad" : "") +
             '">' +
             (answer === true ? "真詞" : answer === false ? "非詞" : "答案未定") +
-            "</span></div>" +
+            '</span></div></div>' +
+            '<div class="prime-panel"><div class="prime-section-label">Prime · ' +
+            escapeHtml(primeLexicalityLabel) +
+            "</div>" +
             '<div class="prime-pair"><div class="prime-box"><div class="label">Prime A 諧音</div><div class="text">' +
             escapeHtml(trimStr(trial.prime_a) || "—") +
             '</div></div><div class="prime-box"><div class="label">Prime B 無諧音</div><div class="text">' +
             escapeHtml(trimStr(trial.prime_b) || "—") +
-            "</div></div></div>";
+            "</div></div></div></div>";
 
           if (trimStr(trial.target_url)) {
             const audio = document.createElement("audio");
-            audio.controls = true;
             audio.preload = "none";
             audio.src = trimStr(trial.target_url);
-            card.appendChild(audio);
+            audio.hidden = true;
+
+            const playButton = document.createElement("button");
+            playButton.type = "button";
+            playButton.className = "target-play-btn";
+            playButton.setAttribute("aria-label", "播放 Target 音檔：" + spokenTargetText);
+
+            playButton.addEventListener("click", () => {
+              audio.currentTime = 0;
+              const playPromise = audio.play();
+              if (playPromise) {
+                playPromise.catch(() => {});
+              }
+            });
+
+            const audioHost = card.querySelector(".target-audio");
+            audioHost.appendChild(playButton);
+            audioHost.appendChild(audio);
           }
           host.appendChild(card);
         });
@@ -1606,6 +1883,8 @@
           state.subjects = buildSubjects(state.results);
 
           renderParticipants();
+          fillGroupAnalysisFilters();
+          renderGroupAnalysis();
           refreshItemSections();
           fillSubjectSelect();
           renderSubject();
@@ -1637,6 +1916,8 @@
         $("formal-group-prev").addEventListener("click", () => moveFormalGroup(-1));
         $("formal-group-next").addEventListener("click", () => moveFormalGroup(1));
         $("formal-group-select").addEventListener("change", renderFormalItems);
+        $("group-filter-oral").addEventListener("change", renderGroupAnalysis);
+        $("group-filter-written").addEventListener("change", renderGroupAnalysis);
         $("subject-prev").addEventListener("click", () => moveSubject(-1));
         $("subject-next").addEventListener("click", () => moveSubject(1));
         $("subject-random").addEventListener("click", randomSubject);
