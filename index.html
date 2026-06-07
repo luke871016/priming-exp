@@ -190,6 +190,11 @@
   }
   .result-cell .num { font-size: 28px; font-weight: 500; color: var(--accent); }
   .result-cell .lbl { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .result-explanation {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px; margin-top: 24px; text-align: left;
+  }
+  .result-explanation p:last-child { margin-bottom: 0; }
 
   /* 工具列 (設定工具) */
   #config-banner {
@@ -342,6 +347,13 @@
     <div class="result-grid" id="result-stats"></div>
     <p id="result-msg"></p>
     <div id="saving-status" style="font-size:14px;color:var(--text-muted);margin-top:12px;"></div>
+  </div>
+  <div id="result-explanation" class="result-explanation hidden">
+    <p>這個實驗的本質是在研究「促發效應（Priming Effect）」，簡單來說就是「前面看到或想到的東西，會影響後面怎麼想事情。」</p>
+    <p>過往的研究指出有許多元素都有影響。像是「語意」或是「語音」的關聯性都能產生促發效應，比如說受試者前面看過「醫生」，後面辨識出「病人」的速度就會更快更精確。</p>
+    <p>而這個實驗則是在研究「華語」跟「台語」兩種語言對於各位雙語者的促發效應關係，因此你會看到許多似是而非的詞，以及聽到一些疑似台灣🐶語的內容都是很正常的！</p>
+    <p>而詳細的題目設計與研究結果之後會再發文跟大家分享🙇🏻</p>
+    <p>感謝各位參與實驗。</p>
   </div>
 </div>
 
@@ -871,6 +883,7 @@ function showResultFeedback() {
   if (feedback) feedback.value = surveyData.free_feedback || '';
   document.getElementById('result-feedback').classList.remove('hidden');
   document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-explanation').classList.add('hidden');
   document.getElementById('result-complete').classList.add('hidden');
 }
 
@@ -886,6 +899,7 @@ function submitFinalFeedback() {
 function showResultSaving() {
   document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.remove('hidden');
+  document.getElementById('result-explanation').classList.remove('hidden');
   document.getElementById('result-complete').classList.add('hidden');
 }
 
@@ -899,6 +913,7 @@ function showResultComplete(avgRt, acc, savedCount) {
   status.style.color = 'var(--success)';
   document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-explanation').classList.remove('hidden');
   document.getElementById('result-complete').classList.remove('hidden');
 }
 
@@ -912,6 +927,7 @@ function showResultSaveError(errorMessage) {
   status.style.color = 'var(--danger)';
   document.getElementById('result-feedback').classList.add('hidden');
   document.getElementById('result-saving').classList.add('hidden');
+  document.getElementById('result-explanation').classList.remove('hidden');
   document.getElementById('result-complete').classList.remove('hidden');
 }
 
