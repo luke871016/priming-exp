@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Priming Experiment 結果分析</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
     <style>
       :root {
@@ -17,6 +20,7 @@
         --text: #2c3e50;
         --subtext: #5d6d7e;
         --surface: #ffffff;
+        --question-font: "Iansui", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
       }
 
       * {
@@ -236,7 +240,7 @@
 
       .item-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 14px;
       }
 
@@ -425,11 +429,16 @@
       }
 
       .item-card {
+        position: relative;
         display: flex;
         flex-direction: column;
         gap: 0;
         overflow: hidden;
         padding: 0;
+      }
+
+      .item-analysis-card {
+        overflow: visible;
       }
 
       .item-head {
@@ -441,6 +450,7 @@
       }
 
       .item-id {
+        font-family: var(--question-font);
         font-size: 14px;
         font-weight: 400;
         color: var(--primary);
@@ -453,8 +463,8 @@
       }
 
       .target-panel {
-        background: #fff;
         border-bottom: 1px solid rgba(44, 62, 80, 0.16);
+        padding-right: 48px;
       }
 
       .target-section-label,
@@ -483,14 +493,20 @@
       }
 
       .target-spoken-text {
+        font-family: var(--question-font);
         color: var(--text);
         font-size: 19px;
         font-weight: 700;
         line-height: 1.45;
+        white-space: nowrap;
         word-break: break-word;
       }
 
       .target-audio {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 1;
         display: inline-flex;
         align-items: center;
       }
@@ -563,7 +579,12 @@
         margin-top: 8px;
       }
 
+      .item-analysis-prime-pair {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
       .prime-box {
+        position: relative;
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 8px;
@@ -578,11 +599,109 @@
       }
 
       .prime-box .text {
+        font-family: var(--question-font);
         font-size: 19px;
         font-weight: 700;
         color: var(--text);
         margin-top: 2px;
         word-break: break-word;
+      }
+
+      .item-analysis-prime-box {
+        display: flex;
+        gap: 2px;
+        align-items: center;
+        overflow: visible;
+      }
+
+      .item-analysis-prime-box .prime-copy {
+        flex: 0 0 38%;
+        min-width: 74px;
+        max-width: 128px;
+      }
+
+      .item-analysis-prime-box .label {
+        font-size: 12px;
+      }
+
+      .item-analysis-prime-box .text {
+        font-size: 18px;
+        line-height: 1.3;
+      }
+
+      .prime-box .metric-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 7px;
+        margin-top: 10px;
+      }
+
+      .item-analysis-prime-box .metric-row {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin-top: 0;
+      }
+
+      .prime-box .metric {
+        position: relative;
+        cursor: help;
+      }
+
+      .prime-box .metric-tooltip {
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 8px);
+        z-index: 5;
+        min-width: 142px;
+        padding: 7px 9px;
+        border-radius: 8px;
+        background: rgba(44, 62, 80, 0.94);
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.45;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        opacity: 0;
+        transform: translateY(4px);
+        pointer-events: none;
+        transition: opacity 0.12s ease, transform 0.12s ease;
+      }
+
+      .prime-box .metric-tooltip::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 100%;
+        border-width: 6px 6px 0;
+        border-style: solid;
+        border-color: rgba(44, 62, 80, 0.94) transparent transparent;
+      }
+
+      .prime-box .metric:hover .metric-tooltip,
+      .prime-box .metric:focus .metric-tooltip {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .prime-box .metric-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #e8ecf1;
+        overflow: hidden;
+      }
+
+      .prime-box .metric-fill {
+        height: 100%;
+        max-width: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+      }
+
+      .prime-box .metric-fill.accuracy {
+        background: var(--green);
+      }
+
+      .trial-question-text {
+        font-family: var(--question-font);
       }
 
       audio {
@@ -639,6 +758,16 @@
         font-size: 15px;
         font-weight: 600;
         margin-top: 2px;
+      }
+
+      .survey-feedback-card {
+        grid-column: 1 / -1;
+      }
+
+      .survey-feedback-card .value {
+        font-weight: 500;
+        line-height: 1.6;
+        white-space: pre-wrap;
       }
 
       .trial-grid {
@@ -748,6 +877,25 @@
           padding: 22px 18px;
         }
 
+        .item-grid {
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+
+        .item-analysis-prime-box {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .item-analysis-prime-box .prime-copy {
+          flex-basis: auto;
+          max-width: none;
+        }
+
+        .item-analysis-prime-box .metric-row {
+          width: 100%;
+        }
+
         nav {
           align-items: stretch;
         }
@@ -768,18 +916,19 @@
       <a href="#sec-participants">受試者統計</a>
       <a href="#sec-items">題目設計檢視</a>
       <a href="#sec-group-analysis">分題目組別</a>
+      <a href="#sec-item-analysis">單一題目</a>
       <a href="#sec-subject">單一受試者</a>
     </nav>
 
     <div class="page-wrap">
       <header>
         <h1>華語 Prime 與台語聽覺詞彙辨識實驗結果分析</h1>
-        <p class="subtext">此報表直接連線 Google Apps Script，讀取 Google Sheet 中最新的題目與作答結果。</p>
+        <p class="subtext">此報表會優先讀取本機暫存資料；需要更新時，請手動載入 Google Sheet 中最新的題目與作答結果。</p>
       </header>
 
       <section id="sec-load">
         <h2><span class="sec-num">1</span>資料來源</h2>
-        <p class="subtext">預設使用實驗頁目前的 GAS Web App URL。若重新部署 GAS，請在下方貼上新的 Web App URL 後重新載入。</p>
+        <p class="subtext">預設使用實驗頁目前的 GAS Web App URL。若重新部署 GAS，請在下方貼上新的 Web App URL，再手動載入最新資料。</p>
         <div class="toolbar">
           <label>
             GAS Web App URL
@@ -925,8 +1074,24 @@
         </div>
       </section>
 
+      <section id="sec-item-analysis">
+        <h2><span class="sec-num">5</span>單一題目分析</h2>
+        <p class="subtext">依單一正式題目彙整 Prime A / Prime B 兩種條件的平均 RT 與正確率；台語口語與書面程度篩選會沿用上方「分題目組別分析」的設定。</p>
+        <div class="browse-nav-row">
+          <button type="button" id="item-analysis-group-prev" class="browse-nav-btn" aria-label="上一組" title="上一組">‹</button>
+          <div class="browse-nav-center">
+            <label>
+              選擇組別
+              <select id="item-analysis-group-select"></select>
+            </label>
+          </div>
+          <button type="button" id="item-analysis-group-next" class="browse-nav-btn" aria-label="下一組" title="下一組">›</button>
+        </div>
+        <div id="item-analysis-cards" class="item-grid"></div>
+      </section>
+
       <section id="sec-subject">
-        <h2><span class="sec-num">5</span>單一受試者資料檢視</h2>
+        <h2><span class="sec-num">6</span>單一受試者資料檢視</h2>
         <p class="subtext">選擇一位受試者後，可檢視該受試者正式試次的平均 RT、正確率，以及每題被分配到的 prime、RT 與回答正確性。</p>
         <div class="toolbar">
           <button type="button" id="subject-prev" class="browse-nav-btn" aria-label="上一位受試者" title="上一位受試者">‹</button>
@@ -954,10 +1119,6 @@
         </div>
         <div id="subject-survey"></div>
         <div id="subject-summary"></div>
-        <div class="chart-row">
-          <div class="chart-wrap" id="chart-subject-overview"></div>
-          <div class="chart-wrap" id="chart-subject-rt"></div>
-        </div>
         <div id="subject-trials" class="trial-grid"></div>
       </section>
     </div>
@@ -968,6 +1129,19 @@
       const DEFAULT_GAS_URL =
         "https://script.google.com/macros/s/AKfycbzB8gAwM0lLUZfAzACO9TmMeaMNPwAeBG4yH7RzRtB88CSrWm7qOhV5k72Fw4Pqmu7t/exec";
       const GAS_URL_STORAGE_KEY = "primingReportGasUrlV1";
+      const REPORT_DATA_STORAGE_KEY = "primingReportDataV1";
+      const REPORT_DB_NAME = "primingReportCacheV1";
+      const REPORT_DB_STORE = "payload";
+      const REPORT_DATA_RECORD_KEY = "latest";
+      const RESULT_CACHE_OMIT_KEYS = new Set([
+        "is_mobile",
+        "os",
+        "browser",
+        "audio_base_latency_ms",
+        "hardware_concurrency",
+        "user_agent",
+        "survey_data_raw",
+      ]);
 
       const DESIGN_GROUP_META = {
         A: {
@@ -1217,6 +1391,14 @@
         return meta.label + "：" + meta.short;
       }
 
+      function designGroupAxisLabel(group) {
+        const meta = designGroupMeta(group);
+        const designParts = trimStr(meta.short).split(" × ");
+        const primeLexicality = (designParts[0] || trimStr(meta.primeLexicality)).replace("華文", "華語").replace(" Prime（", "").replace("）", "");
+        const targetLexicality = (designParts[1] || trimStr(meta.targetLexicality)).replace(" Target（", "").replace("）", "");
+        return meta.label + "<br>" + targetLexicality + "<br>" + primeLexicality;
+      }
+
       function countMap(values) {
         const map = new Map();
         values.forEach((value) => {
@@ -1422,6 +1604,7 @@
 
       function plotGroupPrimeMetric(elId, stats, options) {
         const groups = ["A", "B", "C", "D"];
+        const groupLabels = groups.map(designGroupAxisLabel);
         const primes = ["A", "B"];
         const traces = primes.map((prime) => {
           const primeStats = groups.map((group) => stats.find((stat) => stat.group === group && stat.prime === prime));
@@ -1433,7 +1616,7 @@
           return {
             type: "bar",
             name: "Prime " + prime,
-            x: groups.map((group) => group + " 組"),
+            x: groupLabels,
             y: yValues,
             text: rawValues.map((value) => options.textFormatter(value)),
             textposition: "outside",
@@ -1448,13 +1631,186 @@
           traces,
           {
             ...plotlyLayoutBase,
+            margin: { ...plotlyLayoutBase.margin, b: 125 },
             title: { text: options.title },
             barmode: "group",
             yaxis: { title: options.yTitle, rangemode: "tozero" },
-            xaxis: { title: "題目組別" },
-            legend: { orientation: "h", y: -0.2 },
+            xaxis: { title: { text: "題目組別", standoff: 18 }, automargin: true },
+            legend: { orientation: "h", y: -0.34 },
           },
           { responsive: true },
+        );
+      }
+
+      function itemPrimeStatsByItem(rows) {
+        const buckets = new Map();
+        rows
+          .filter((row) => trimStr(row.type) === "experiment")
+          .forEach((row) => {
+            const itemId = trimStr(row.item_id);
+            const prime = trimStr(row.prime_assigned).toUpperCase();
+            if (!itemId || !["A", "B"].includes(prime)) return;
+            const key = itemId + "|" + prime;
+            if (!buckets.has(key)) {
+              buckets.set(key, {
+                itemId,
+                prime,
+                primeText: trimStr(row.prime_text),
+                rtValues: [],
+                accValues: [],
+                n: 0,
+              });
+            }
+            const bucket = buckets.get(key);
+            bucket.n += 1;
+            if (!bucket.primeText) bucket.primeText = trimStr(row.prime_text);
+            if (Number.isFinite(row.rt_ms)) bucket.rtValues.push(row.rt_ms);
+            if (Number.isFinite(row.accuracy)) bucket.accValues.push(row.accuracy);
+          });
+
+        const stats = new Map();
+        buckets.forEach((bucket, key) => {
+          stats.set(key, {
+            itemId: bucket.itemId,
+            prime: bucket.prime,
+            primeText: bucket.primeText,
+            n: bucket.n,
+            avgRt: mean(bucket.rtValues),
+            accuracy: mean(bucket.accValues),
+          });
+        });
+        return stats;
+      }
+
+      function refreshItemAnalysisGroups() {
+        const sel = $("item-analysis-group-select");
+        const groups = Array.from(
+          new Set(
+            state.trials
+              .filter((trial) => trimStr(trial.type) === "experiment")
+              .map(itemDesignGroup),
+          ),
+        ).sort((a, b) => {
+          const oa = groupOrderValue(a);
+          const ob = groupOrderValue(b);
+          if (oa !== ob) return oa - ob;
+          return a.localeCompare(b, "zh-Hant");
+        });
+        const previous = sel.value;
+        sel.innerHTML = "";
+        groups.forEach((group) => {
+          const opt = document.createElement("option");
+          opt.value = group;
+          opt.textContent = designGroupOptionText(group);
+          sel.appendChild(opt);
+        });
+        if (groups.includes(previous)) sel.value = previous;
+        $("item-analysis-group-prev").disabled = groups.length <= 1;
+        $("item-analysis-group-next").disabled = groups.length <= 1;
+        renderItemAnalysis();
+      }
+
+      function moveItemAnalysisGroup(delta) {
+        const sel = $("item-analysis-group-select");
+        const n = sel.options.length;
+        if (n <= 1) return;
+        sel.selectedIndex = (sel.selectedIndex + delta + n) % n;
+        renderItemAnalysis();
+      }
+
+      function renderItemAnalysis() {
+        const currentGroup = $("item-analysis-group-select").value;
+        const host = $("item-analysis-cards");
+        host.innerHTML = "";
+
+        const trials = state.trials
+          .filter((trial) => trimStr(trial.type) === "experiment")
+          .filter((trial) => itemDesignGroup(trial) === currentGroup)
+          .slice()
+          .sort(sortTrialsByItemId);
+
+        if (!trials.length) {
+          host.innerHTML = '<p class="subtext">目前沒有此組正式題目可分析。</p>';
+          return;
+        }
+
+        const stats = itemPrimeStatsByItem(filteredGroupAnalysisRows());
+        trials.forEach((trial) => {
+          const card = document.createElement("article");
+          card.className = "item-card item-analysis-card";
+          const group = itemDesignGroup(trial);
+          const meta = designGroupMeta(group);
+          const targetText = trimStr(trial.target_text || trial.target || trial.item_id) || "未命名 Target";
+          const spokenTargetText = trimStr(trial.notes) || "—";
+          const designParts = trimStr(meta.short).split(" × ");
+          const primeLexicalityLabel = designParts[0] || trimStr(meta.primeLexicality);
+          const targetLexicalityLabel = designParts[1] || trimStr(meta.targetLexicality);
+          const itemId = trimStr(trial.item_id);
+          const primeAStats = stats.get(itemId + "|A");
+          const primeBStats = stats.get(itemId + "|B");
+
+          card.innerHTML =
+            '<div class="target-panel"><div class="target-section-label">Target · ' +
+            escapeHtml(targetLexicalityLabel) +
+            "</div>" +
+            '<div class="target-main"><div><div class="item-id">' +
+            escapeHtml(targetText) +
+            '</div><div class="target-spoken-row"><div class="target-spoken-text">' +
+            escapeHtml(spokenTargetText) +
+            "</div></div></div></div></div>" +
+            '<div class="prime-panel"><div class="prime-section-label">Prime · ' +
+            escapeHtml(primeLexicalityLabel) +
+            "</div>" +
+            '<div class="prime-pair item-analysis-prime-pair">' +
+            renderItemAnalysisPrimeBox("A", "諧音", trimStr(trial.prime_a) || (primeAStats && primeAStats.primeText) || "—", primeAStats) +
+            renderItemAnalysisPrimeBox("B", "無諧音", trimStr(trial.prime_b) || (primeBStats && primeBStats.primeText) || "—", primeBStats) +
+            "</div></div>";
+
+          host.appendChild(card);
+        });
+      }
+
+      function renderItemAnalysisPrimeBox(prime, relation, primeText, stats) {
+        const avgRt = stats ? stats.avgRt : NaN;
+        const accuracy = stats ? stats.accuracy : NaN;
+        const trialCount = stats ? stats.n : 0;
+        const rtText = fmtMs(avgRt);
+        const accuracyText = pct(accuracy);
+        return (
+          '<div class="prime-box item-analysis-prime-box"><div class="prime-copy"><div class="label">' +
+          escapeHtml(prime) +
+          " " +
+          escapeHtml(relation) +
+          '</div><div class="text">' +
+          escapeHtml(primeText || "—") +
+          '</div></div><div class="metric-row">' +
+          renderPrimeMetric("平均 RT", rtText, metricFillPct(avgRt, 5000), "", trialCount) +
+          renderPrimeMetric("正確率", accuracyText, metricFillPct(accuracy * 100, 100), "accuracy", trialCount) +
+          "</div></div>"
+        );
+      }
+
+      function metricFillPct(value, maxValue) {
+        if (!Number.isFinite(value) || !Number.isFinite(maxValue) || maxValue <= 0) return 0;
+        return Math.max(0, Math.min(100, (value / maxValue) * 100));
+      }
+
+      function renderPrimeMetric(label, value, fillPct, fillClass, trialCount) {
+        const tooltip = label + "：" + value + "\n試次數：" + trialCount;
+        return (
+          '<div class="metric" tabindex="0" aria-label="' +
+          escapeHtml(tooltip) +
+          '"><div class="metric-track"><div class="metric-fill ' +
+          escapeHtml(fillClass || "") +
+          '" style="width:' +
+          metricFillPct(fillPct, 100).toFixed(1) +
+          '%"></div></div><div class="metric-tooltip">' +
+          escapeHtml(label) +
+          "：" +
+          escapeHtml(value) +
+          "<br>試次數：" +
+          escapeHtml(String(trialCount)) +
+          "</div></div>"
         );
       }
 
@@ -1531,7 +1887,6 @@
         rows.forEach((trial) => {
           const card = document.createElement("article");
           card.className = "item-card";
-          const answer = parseBool(trial.answer);
           const group = trimStr(trial.type) === "experiment" ? itemDesignGroup(trial) : "P";
           const meta = group === "P"
             ? { label: "P 組", short: "練習題", primeLexicality: "練習題", targetLexicality: "練習題" }
@@ -1549,17 +1904,13 @@
             escapeHtml(targetText) +
             '</div><div class="target-spoken-row"><div class="target-spoken-text">' +
             escapeHtml(spokenTargetText) +
-            '</div><span class="target-audio"></span></div></div><span class="pill ' +
-            (answer === true ? "good" : answer === false ? "bad" : "") +
-            '">' +
-            (answer === true ? "真詞" : answer === false ? "非詞" : "答案未定") +
-            '</span></div></div>' +
+            '</div><span class="target-audio"></span></div></div></div></div>' +
             '<div class="prime-panel"><div class="prime-section-label">Prime · ' +
             escapeHtml(primeLexicalityLabel) +
             "</div>" +
-            '<div class="prime-pair"><div class="prime-box"><div class="label">Prime A 諧音</div><div class="text">' +
+            '<div class="prime-pair"><div class="prime-box"><div class="label">A 諧音</div><div class="text">' +
             escapeHtml(trimStr(trial.prime_a) || "—") +
-            '</div></div><div class="prime-box"><div class="label">Prime B 無諧音</div><div class="text">' +
+            '</div></div><div class="prime-box"><div class="label">B 無諧音</div><div class="text">' +
             escapeHtml(trimStr(trial.prime_b) || "—") +
             "</div></div></div></div>";
 
@@ -1647,6 +1998,8 @@
             if (og !== 0) return og;
             const cg = ga.localeCompare(gb, "zh-Hant");
             if (cg !== 0) return cg;
+            const oi = sortTrialsByItemId(a, b);
+            if (oi !== 0) return oi;
             return subjectTrialOrder(a) - subjectTrialOrder(b);
           });
           return sorted;
@@ -1670,8 +2023,6 @@
         if (!subject) {
           surveyHost.innerHTML = "";
           summary.innerHTML = '<p class="subtext">尚無受試者資料。</p>';
-          Plotly.purge($("chart-subject-overview"));
-          Plotly.purge($("chart-subject-rt"));
           return;
         }
 
@@ -1692,14 +2043,13 @@
           metricCard(correctN + " / " + accRows.length, "正確題數") +
           "</div>";
 
-        plotSubjectOverview(avgRt, acc);
-        plotSubjectRt(rows);
         renderSubjectTrialCards(host, rows);
       }
 
       function renderSubjectSurvey(subject) {
         const survey = subject.survey || {};
         const age = getAge(survey);
+        const freeFeedback = getSurveyValue(survey, ["free_feedback"]);
         const cards = [
           ["受試者代碼", subject.participantId],
           ["作答時間", subject.timestamp || "—"],
@@ -1718,65 +2068,16 @@
             escapeHtml(value || "—") +
             "</div></div>";
         });
+        html +=
+          '<div class="survey-answer-card survey-feedback-card"><div class="label">質性測驗回饋</div><div class="value">' +
+          escapeHtml(freeFeedback || "未填") +
+          "</div></div>";
         html += "</div>";
         $("subject-survey").innerHTML = html;
       }
 
       function metricCard(value, label) {
         return '<div class="subject-metric"><div class="value">' + escapeHtml(String(value)) + '</div><div class="label">' + label + "</div></div>";
-      }
-
-      function plotSubjectOverview(avgRt, acc) {
-        Plotly.react(
-          $("chart-subject-overview"),
-          [
-            {
-              type: "bar",
-              x: ["平均 RT（秒）", "正確率（%）"],
-              y: [Number.isFinite(avgRt) ? avgRt / 1000 : null, Number.isFinite(acc) ? acc * 100 : null],
-              marker: { color: ["#2980b9", "#1e8449"] },
-              text: [fmtMs(avgRt), pct(acc)],
-              textposition: "outside",
-              cliponaxis: false,
-            },
-          ],
-          {
-            ...plotlyLayoutBase,
-            title: { text: "單一受試者摘要" },
-            yaxis: { title: "數值", rangemode: "tozero" },
-          },
-          { responsive: true },
-        );
-      }
-
-      function plotSubjectRt(rows) {
-        const points = rows.map((row, i) => ({
-          x: i + 1,
-          y: Number.isFinite(row.rt_ms) ? row.rt_ms : null,
-          item: trimStr(row.item_id),
-          ok: row.accuracy === 1,
-        }));
-        Plotly.react(
-          $("chart-subject-rt"),
-          [
-            {
-              type: "scatter",
-              mode: "markers+lines",
-              x: points.map((p) => p.x),
-              y: points.map((p) => p.y),
-              text: points.map((p) => p.item),
-              marker: { color: points.map((p) => (p.ok ? "#1e8449" : "#c0392b")), size: 8 },
-              hovertemplate: "第 %{x} 題<br>%{text}<br>RT %{y:.0f} ms<extra></extra>",
-            },
-          ],
-          {
-            ...plotlyLayoutBase,
-            title: { text: "逐題 RT" },
-            xaxis: { title: "呈現順序" },
-            yaxis: { title: "RT（ms）", rangemode: "tozero" },
-          },
-          { responsive: true },
-        );
       }
 
       function renderSubjectTrialCards(host, rows) {
@@ -1815,8 +2116,9 @@
             '<div class="trial-meta">Prime ' +
             escapeHtml(trimStr(row.prime_assigned) || "—") +
             "：" +
+            '<span class="trial-question-text">' +
             escapeHtml(trimStr(row.prime_text) || "—") +
-            "</div>" +
+            "</span></div>" +
             '<div class="trial-meta">RT：' +
             fmtMs(rt) +
             "；回答：" +
@@ -1828,8 +2130,9 @@
             escapeHtml(designGroupOptionText(group)) +
             "</div>" +
             '<div class="trial-meta">Target：' +
+            '<span class="trial-question-text">' +
             escapeHtml(trimStr(trial && trial.notes ? trial.notes : row.notes) || "—") +
-            "</div>" +
+            "</span></div>" +
             '<div class="rt-track"><div class="rt-fill" style="width:' +
             rtPct.toFixed(1) +
             '%"></div></div>';
@@ -1860,6 +2163,121 @@
         return data;
       }
 
+      function slimResultRowForCache(row) {
+        const out = {};
+        Object.keys(row).forEach((key) => {
+          if (!RESULT_CACHE_OMIT_KEYS.has(key)) out[key] = row[key];
+        });
+        return out;
+      }
+
+      function buildReportPayload(configData, trialsData, resultsData) {
+        const results = Array.isArray(resultsData.results) ? resultsData.results : [];
+        return {
+          savedAt: new Date().toISOString(),
+          config: configData.config || {},
+          trials: Array.isArray(trialsData.trials) ? trialsData.trials : [],
+          results: results.map(slimResultRowForCache),
+        };
+      }
+
+      function openReportDb() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(REPORT_DB_NAME, 1);
+          req.onerror = () => reject(req.error || new Error("無法開啟 IndexedDB"));
+          req.onsuccess = () => resolve(req.result);
+          req.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(REPORT_DB_STORE)) {
+              db.createObjectStore(REPORT_DB_STORE);
+            }
+          };
+        });
+      }
+
+      async function saveReportPayload(payload) {
+        const db = await openReportDb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(REPORT_DB_STORE, "readwrite");
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => {
+            db.close();
+            reject(tx.error || new Error("暫存寫入失敗"));
+          };
+          tx.objectStore(REPORT_DB_STORE).put(payload, REPORT_DATA_RECORD_KEY);
+        });
+      }
+
+      async function readLegacyLocalStoragePayload() {
+        const raw = localStorage.getItem(REPORT_DATA_STORAGE_KEY);
+        if (!raw) return null;
+        try {
+          const payload = JSON.parse(raw);
+          if (!payload || typeof payload !== "object") return null;
+          localStorage.removeItem(REPORT_DATA_STORAGE_KEY);
+          await saveReportPayload(payload);
+          return payload;
+        } catch (_err) {
+          localStorage.removeItem(REPORT_DATA_STORAGE_KEY);
+          return null;
+        }
+      }
+
+      async function readReportPayload() {
+        const legacyPayload = await readLegacyLocalStoragePayload();
+        if (legacyPayload) return legacyPayload;
+
+        const db = await openReportDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(REPORT_DB_STORE, "readonly");
+          const req = tx.objectStore(REPORT_DB_STORE).get(REPORT_DATA_RECORD_KEY);
+          req.onsuccess = () => {
+            db.close();
+            const payload = req.result;
+            resolve(payload && typeof payload === "object" ? payload : null);
+          };
+          req.onerror = () => {
+            db.close();
+            reject(req.error || new Error("讀取暫存失敗"));
+          };
+        });
+      }
+
+      function applyReportPayload(payload) {
+        state.config = payload.config || {};
+        state.trials = Array.isArray(payload.trials) ? payload.trials : [];
+        state.results = (Array.isArray(payload.results) ? payload.results : []).map(normalizeResultRow);
+        state.trialMap = buildTrialMap(state.trials);
+        state.subjects = buildSubjects(state.results);
+
+        renderParticipants();
+        fillGroupAnalysisFilters();
+        renderGroupAnalysis();
+        refreshItemSections();
+        refreshItemAnalysisGroups();
+        fillSubjectSelect();
+        renderSubject();
+      }
+
+      function reportStatusText(prefix, payload) {
+        const savedAt = payload && payload.savedAt ? new Date(payload.savedAt) : null;
+        const savedAtText =
+          savedAt && !Number.isNaN(savedAt.getTime()) ? "（暫存時間：" + savedAt.toLocaleString("zh-TW") + "）" : "";
+        return (
+          prefix +
+          state.trials.length +
+          " 題、" +
+          state.results.length +
+          " 筆結果列、" +
+          state.subjects.length +
+          " 位受試者。" +
+          savedAtText
+        );
+      }
+
       async function loadData() {
         const gasUrl = trimStr($("gas-url").value);
         if (!gasUrl) {
@@ -1876,27 +2294,11 @@
             fetchJson(gasUrl + "?action=getResults"),
           ]);
 
-          state.config = configData.config || {};
-          state.trials = Array.isArray(trialsData.trials) ? trialsData.trials : [];
-          state.results = (Array.isArray(resultsData.results) ? resultsData.results : []).map(normalizeResultRow);
-          state.trialMap = buildTrialMap(state.trials);
-          state.subjects = buildSubjects(state.results);
+          const payload = buildReportPayload(configData, trialsData, resultsData);
+          await saveReportPayload(payload);
+          applyReportPayload(payload);
 
-          renderParticipants();
-          fillGroupAnalysisFilters();
-          renderGroupAnalysis();
-          refreshItemSections();
-          fillSubjectSelect();
-          renderSubject();
-
-          $("load-status").textContent =
-            "已載入 " +
-            state.trials.length +
-            " 題、" +
-            state.results.length +
-            " 筆結果列、" +
-            state.subjects.length +
-            " 位受試者。";
+          $("load-status").textContent = reportStatusText("已手動載入最新資料並暫存：", payload);
         } catch (err) {
           $("load-status").innerHTML =
             '<span class="error">載入失敗：' +
@@ -1905,29 +2307,59 @@
         }
       }
 
-      function init() {
+      async function init() {
         $("gas-url").value = localStorage.getItem(GAS_URL_STORAGE_KEY) || DEFAULT_GAS_URL;
         $("btn-load").addEventListener("click", loadData);
         $("btn-reset-url").addEventListener("click", () => {
           $("gas-url").value = DEFAULT_GAS_URL;
           localStorage.removeItem(GAS_URL_STORAGE_KEY);
-          loadData();
+          $("load-status").textContent = "已恢復預設 URL。請按「載入最新資料」更新報表資料。";
         });
         $("formal-group-prev").addEventListener("click", () => moveFormalGroup(-1));
         $("formal-group-next").addEventListener("click", () => moveFormalGroup(1));
         $("formal-group-select").addEventListener("change", renderFormalItems);
-        $("group-filter-oral").addEventListener("change", renderGroupAnalysis);
-        $("group-filter-written").addEventListener("change", renderGroupAnalysis);
+        $("item-analysis-group-prev").addEventListener("click", () => moveItemAnalysisGroup(-1));
+        $("item-analysis-group-next").addEventListener("click", () => moveItemAnalysisGroup(1));
+        $("item-analysis-group-select").addEventListener("change", renderItemAnalysis);
+        $("group-filter-oral").addEventListener("change", () => {
+          renderGroupAnalysis();
+          renderItemAnalysis();
+        });
+        $("group-filter-written").addEventListener("change", () => {
+          renderGroupAnalysis();
+          renderItemAnalysis();
+        });
         $("subject-prev").addEventListener("click", () => moveSubject(-1));
         $("subject-next").addEventListener("click", () => moveSubject(1));
         $("subject-random").addEventListener("click", randomSubject);
         $("subject-select").addEventListener("change", renderSubject);
         $("subject-trial-type").addEventListener("change", renderSubject);
         $("subject-view-mode").addEventListener("change", renderSubject);
-        loadData();
+
+        try {
+          const cachedPayload = await readReportPayload();
+          if (cachedPayload) {
+            applyReportPayload(cachedPayload);
+            $("load-status").textContent = reportStatusText("已載入本機暫存資料：", cachedPayload);
+          } else {
+            $("load-status").textContent = "尚未載入。請按「載入最新資料」從 GAS 取得資料並暫存。";
+          }
+        } catch (err) {
+          $("load-status").innerHTML =
+            '<span class="error">讀取本機暫存失敗：' +
+            escapeHtml(err && err.message ? err.message : String(err)) +
+            "。請按「載入最新資料」重新取得。</span>";
+        }
       }
 
-      document.addEventListener("DOMContentLoaded", init);
+      document.addEventListener("DOMContentLoaded", () => {
+        init().catch((err) => {
+          $("load-status").innerHTML =
+            '<span class="error">初始化失敗：' +
+            escapeHtml(err && err.message ? err.message : String(err)) +
+            "</span>";
+        });
+      });
     </script>
   </body>
 </html>
