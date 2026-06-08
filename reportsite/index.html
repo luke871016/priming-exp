@@ -772,8 +772,8 @@
 
       .trial-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
       }
 
       .trial-group-heading {
@@ -788,49 +788,105 @@
       }
 
       .trial-card {
-        padding: 11px 12px;
-        border-left: 5px solid var(--border);
+        position: relative;
+        min-height: 132px;
+        padding: 12px 12px 14px 18px;
+        border: 1px solid #c4c4c4;
+        border-radius: 10px;
+        box-shadow: -5px 0 0 var(--trial-status-color), 0 1px 3px rgba(44, 62, 80, 0.08);
+        overflow: visible;
+        --trial-status-color: var(--border);
+        --trial-rt-color: var(--accent);
       }
 
       .trial-card.ok {
-        border-left-color: var(--green);
+        --trial-status-color: var(--green);
+        --trial-rt-color: var(--green);
       }
 
       .trial-card.bad {
-        border-left-color: var(--red);
+        --trial-status-color: var(--red);
+        --trial-rt-color: var(--red);
       }
 
       .trial-card.timeout {
-        border-left-color: var(--orange);
+        --trial-status-color: var(--orange);
+        --trial-rt-color: var(--orange);
       }
 
       .trial-title {
-        font-weight: 700;
-        color: var(--primary);
+        color: #111;
         display: flex;
-        justify-content: space-between;
-        gap: 8px;
+        flex-direction: column;
+        gap: 7px;
       }
 
-      .trial-meta {
-        color: var(--subtext);
-        font-size: 12px;
-        margin-top: 4px;
+      .trial-item-id {
+        font-family: var(--question-font);
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+
+      .trial-prime {
+        font-family: var(--question-font);
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.25;
+        word-break: break-word;
+      }
+
+      .trial-target-note {
+        font-family: var(--question-font);
+        color: #7a7a7a;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.35;
+        margin-top: 10px;
+        word-break: break-word;
       }
 
       .rt-track {
         height: 8px;
         border-radius: 999px;
         background: #e8ecf1;
-        overflow: hidden;
-        margin-top: 8px;
+        cursor: help;
+        overflow: visible;
+        margin-top: 13px;
+        position: relative;
+      }
+
+      .rt-track::after {
+        content: attr(data-rt);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        z-index: 4;
+        transform: translate(-50%, 4px);
+        padding: 5px 8px;
+        border-radius: 6px;
+        background: rgba(44, 62, 80, 0.94);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s ease, transform 0.12s ease;
+        white-space: nowrap;
+      }
+
+      .rt-track:hover::after {
+        opacity: 1;
+        transform: translate(-50%, 0);
       }
 
       .rt-fill {
         height: 100%;
         min-width: 2px;
         max-width: 100%;
-        background: var(--accent);
+        border-radius: inherit;
+        background: var(--trial-rt-color);
       }
 
       .data-table-wrap {
@@ -879,6 +935,10 @@
 
         .item-grid {
           grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+
+        .trial-grid {
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         }
 
         .item-analysis-prime-box {
@@ -2105,35 +2165,21 @@
           card.className = "trial-card " + (timedOut ? "timeout" : ok ? "ok" : "bad");
           const rt = Number.isFinite(row.rt_ms) ? row.rt_ms : NaN;
           const rtPct = Number.isFinite(rt) && maxRt > 0 ? Math.min(100, (rt / maxRt) * 100) : 0;
+          const primeGroup = trimStr(row.prime_assigned) || "—";
+          const primeText = trimStr(row.prime_text) || "—";
+          const targetNote = trimStr(trial && trial.notes ? trial.notes : row.notes) || "—";
           card.innerHTML =
-            '<div class="trial-title"><span>' +
+            '<div class="trial-title"><div class="trial-item-id">' +
             escapeHtml(trimStr(row.item_id) || "未命名") +
-            '</span><span class="pill ' +
-            (ok ? "good" : "bad") +
-            '">' +
-            (timedOut ? "逾時" : ok ? "正確" : "錯誤") +
-            "</span></div>" +
-            '<div class="trial-meta">Prime ' +
-            escapeHtml(trimStr(row.prime_assigned) || "—") +
-            "：" +
-            '<span class="trial-question-text">' +
-            escapeHtml(trimStr(row.prime_text) || "—") +
-            "</span></div>" +
-            '<div class="trial-meta">RT：' +
-            fmtMs(rt) +
-            "；回答：" +
-            responseText(row.response) +
-            "；正解：" +
-            responseText(row.correct_answer) +
-            "</div>" +
-            '<div class="trial-meta">題目分組：' +
-            escapeHtml(designGroupOptionText(group)) +
-            "</div>" +
-            '<div class="trial-meta">Target：' +
-            '<span class="trial-question-text">' +
-            escapeHtml(trimStr(trial && trial.notes ? trial.notes : row.notes) || "—") +
-            "</span></div>" +
-            '<div class="rt-track"><div class="rt-fill" style="width:' +
+            '</div><div class="trial-prime">' +
+            escapeHtml(primeGroup) +
+            " " +
+            escapeHtml(primeText) +
+            '</div></div><div class="trial-target-note">' +
+            escapeHtml(targetNote) +
+            '</div><div class="rt-track" data-rt="' +
+            escapeHtml(fmtMs(rt)) +
+            '"><div class="rt-fill" style="width:' +
             rtPct.toFixed(1) +
             '%"></div></div>';
           host.appendChild(card);
