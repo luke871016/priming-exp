@@ -1127,6 +1127,12 @@
               <option value="">全部</option>
             </select>
           </label>
+          <label>
+            性別
+            <select id="group-filter-gender">
+              <option value="">全部</option>
+            </select>
+          </label>
         </div>
         <div class="chart-row">
           <div class="chart-wrap" id="chart-group-rt"></div>
@@ -1137,7 +1143,7 @@
 
       <section id="sec-item-analysis">
         <h2><span class="sec-num">5</span>單一題目分析</h2>
-        <p class="subtext">依單一正式題目彙整 Prime A / Prime B 兩種條件的平均 RT 與正確率；台語口語與書面程度篩選會沿用上方「分題目組別分析」的設定。</p>
+        <p class="subtext">依單一正式題目彙整 Prime A / Prime B 兩種條件的平均 RT 與正確率；台語口語、書面程度與性別篩選會沿用上方「分題目組別分析」的設定。</p>
         <div class="browse-nav-row">
           <button type="button" id="item-analysis-group-prev" class="browse-nav-btn" aria-label="上一組" title="上一組">‹</button>
           <div class="browse-nav-center">
@@ -1718,6 +1724,7 @@
       function fillGroupAnalysisFilters() {
         fillGroupFilterSelect("group-filter-oral", sortedUniqueValues(state.subjects.map((subject) => getOralLevel(subject.survey))));
         fillGroupFilterSelect("group-filter-written", sortedUniqueValues(state.subjects.map((subject) => getWrittenLevel(subject.survey))));
+        fillGroupFilterSelect("group-filter-gender", ["男", "女"]);
       }
 
       function fillGroupFilterSelect(elId, values) {
@@ -1736,10 +1743,12 @@
       function filteredGroupAnalysisRows() {
         const oralFilter = $("group-filter-oral").value;
         const writtenFilter = $("group-filter-written").value;
+        const genderFilter = $("group-filter-gender").value;
         return state.results.filter((row) => {
           const survey = row.survey_data || {};
           if (oralFilter && getOralLevel(survey) !== oralFilter) return false;
           if (writtenFilter && getWrittenLevel(survey) !== writtenFilter) return false;
+          if (genderFilter && getGender(survey) !== genderFilter) return false;
           return true;
         });
       }
@@ -2569,6 +2578,10 @@
           renderItemAnalysis();
         });
         $("group-filter-written").addEventListener("change", () => {
+          renderGroupAnalysis();
+          renderItemAnalysis();
+        });
+        $("group-filter-gender").addEventListener("change", () => {
           renderGroupAnalysis();
           renderItemAnalysis();
         });
