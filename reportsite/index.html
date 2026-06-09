@@ -1132,6 +1132,7 @@
           <div class="chart-wrap" id="chart-group-rt"></div>
           <div class="chart-wrap" id="chart-group-accuracy"></div>
         </div>
+        <div id="group-ttest-summary"></div>
       </section>
 
       <section id="sec-item-analysis">
@@ -1268,6 +1269,111 @@
         const arr = values.filter(Number.isFinite);
         if (!arr.length) return NaN;
         return arr.reduce((s, v) => s + v, 0) / arr.length;
+      }
+
+      function sampleVariance(values) {
+        const arr = values.filter(Number.isFinite);
+        if (arr.length < 2) return NaN;
+        const avg = mean(arr);
+        return arr.reduce((s, v) => s + Math.pow(v - avg, 2), 0) / (arr.length - 1);
+      }
+
+      function logGamma(z) {
+        const coeffs = [676.5203681218851, -1259.1392167224028, 771.3234287776531, -176.6150291621406, 12.507343278686905, -0.13857109526572012, 0.000009984369578019572, 0.00000015056327351493116];
+        if (z < 0.5) return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+        z -= 1;
+        let x = 0.9999999999998099;
+        for (let i = 0; i < coeffs.length; i++) x += coeffs[i] / (z + i + 1);
+        const t = z + coeffs.length - 0.5;
+        return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+      }
+
+      function betaContinuedFraction(a, b, x) {
+        const maxIter = 100;
+        const eps = 3e-7;
+        const fpmin = 1e-30;
+        let qab = a + b;
+        let qap = a + 1;
+        let qam = a - 1;
+        let c = 1;
+        let d = 1 - (qab * x) / qap;
+        if (Math.abs(d) < fpmin) d = fpmin;
+        d = 1 / d;
+        let h = d;
+
+        for (let m = 1; m <= maxIter; m++) {
+          const m2 = 2 * m;
+          let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < fpmin) d = fpmin;
+          c = 1 + aa / c;
+          if (Math.abs(c) < fpmin) c = fpmin;
+          d = 1 / d;
+          h *= d * c;
+
+          aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < fpmin) d = fpmin;
+          c = 1 + aa / c;
+          if (Math.abs(c) < fpmin) c = fpmin;
+          d = 1 / d;
+          const del = d * c;
+          h *= del;
+          if (Math.abs(del - 1) < eps) break;
+        }
+
+        return h;
+      }
+
+      function regularizedBeta(x, a, b) {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        const bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+        if (x < (a + 1) / (a + b + 2)) return (bt * betaContinuedFraction(a, b, x)) / a;
+        return 1 - (bt * betaContinuedFraction(b, a, 1 - x)) / b;
+      }
+
+      function studentTCdf(t, df) {
+        if (!Number.isFinite(t) || !Number.isFinite(df) || df <= 0) return NaN;
+        const x = df / (df + t * t);
+        const ib = regularizedBeta(x, df / 2, 0.5);
+        return t >= 0 ? 1 - ib / 2 : ib / 2;
+      }
+
+      function welchTTest(valuesA, valuesB) {
+        const a = valuesA.filter(Number.isFinite);
+        const b = valuesB.filter(Number.isFinite);
+        if (a.length < 2 || b.length < 2) return null;
+        const meanA = mean(a);
+        const meanB = mean(b);
+        const varA = sampleVariance(a);
+        const varB = sampleVariance(b);
+        const se2 = varA / a.length + varB / b.length;
+        if (!Number.isFinite(se2) || se2 <= 0) {
+          return {
+            meanA,
+            meanB,
+            diff: meanA - meanB,
+            t: meanA === meanB ? 0 : NaN,
+            df: a.length + b.length - 2,
+            p: meanA === meanB ? 1 : NaN,
+            nA: a.length,
+            nB: b.length,
+          };
+        }
+        const t = (meanA - meanB) / Math.sqrt(se2);
+        const df = (se2 * se2) / (Math.pow(varA / a.length, 2) / (a.length - 1) + Math.pow(varB / b.length, 2) / (b.length - 1));
+        const p = 2 * (1 - studentTCdf(Math.abs(t), df));
+        return {
+          meanA,
+          meanB,
+          diff: meanA - meanB,
+          t,
+          df,
+          p: Math.max(0, Math.min(1, p)),
+          nA: a.length,
+          nB: b.length,
+        };
       }
 
       function pct(value) {
@@ -1604,6 +1710,8 @@
           n: bucket.n,
           avgRt: mean(bucket.rtValues),
           accuracy: mean(bucket.accValues),
+          rtValues: bucket.rtValues,
+          accValues: bucket.accValues,
         }));
       }
 
@@ -1642,6 +1750,7 @@
         if (!hasAny) {
           Plotly.react($("chart-group-rt"), [], { ...plotlyLayoutBase, title: { text: "分題目組別平均 RT（目前篩選無資料）" } }, { responsive: true });
           Plotly.react($("chart-group-accuracy"), [], { ...plotlyLayoutBase, title: { text: "分題目組別正確率（目前篩選無資料）" } }, { responsive: true });
+          $("group-ttest-summary").innerHTML = '<p class="subtext">目前篩選條件下沒有足夠資料可進行 t-test。</p>';
           return;
         }
 
@@ -1660,6 +1769,94 @@
           textFormatter: pct,
           hoverFormatter: "%{y:.1f}%",
         });
+        renderGroupTTestSummary(stats);
+      }
+
+      function renderGroupTTestSummary(stats) {
+        const groups = ["A", "B", "C", "D"];
+        const rows = groups.map((group) => {
+          const primeA = stats.find((stat) => stat.group === group && stat.prime === "A") || { rtValues: [], accValues: [] };
+          const primeB = stats.find((stat) => stat.group === group && stat.prime === "B") || { rtValues: [], accValues: [] };
+          return {
+            group,
+            rt: welchTTest(primeA.rtValues, primeB.rtValues),
+            accuracy: welchTTest(primeA.accValues, primeB.accValues),
+          };
+        });
+
+        $("group-ttest-summary").innerHTML =
+          '<div class="report-subsection">' +
+          "<h3>Prime A / Prime B 的 T-test 檢定</h3>" +
+          '<p class="subtext">以下以 Welch two-sample t-test 比較每個題目組別內 Prime A 與 Prime B 的差異；RT 使用有效反應時間，正確率以每筆 trial 的正誤值（1 / 0）計算。差值為 Prime A 減 Prime B。</p>' +
+          '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+          "<th>題目組別</th><th>指標</th><th>Prime A</th><th>Prime B</th><th>差值</th><th>t</th><th>df</th><th>p</th><th>判讀</th>" +
+          "</tr></thead><tbody>" +
+          rows
+            .map((row) => renderGroupTTestRow(row.group, "RT", row.rt) + renderGroupTTestRow(row.group, "正確率", row.accuracy))
+            .join("") +
+          "</tbody></table></div></div>";
+      }
+
+      function renderGroupTTestRow(group, metric, result) {
+        const formatter = metric === "RT" ? fmtMs : pct;
+        if (!result) {
+          return (
+            "<tr><td>" +
+            escapeHtml(designGroupMeta(group).label) +
+            "</td><td>" +
+            escapeHtml(metric) +
+            '</td><td colspan="7">Prime A 或 Prime B 的有效資料少於 2 筆，無法進行 t-test。</td></tr>'
+          );
+        }
+        return (
+          "<tr><td>" +
+          escapeHtml(designGroupMeta(group).label) +
+          "</td><td>" +
+          escapeHtml(metric) +
+          "</td><td>" +
+          escapeHtml(formatter(result.meanA)) +
+          "（n=" +
+          result.nA +
+          "）</td><td>" +
+          escapeHtml(formatter(result.meanB)) +
+          "（n=" +
+          result.nB +
+          "）</td><td>" +
+          escapeHtml(formatter(result.diff)) +
+          "</td><td>" +
+          escapeHtml(formatStatNumber(result.t, 2)) +
+          "</td><td>" +
+          escapeHtml(formatStatNumber(result.df, 1)) +
+          "</td><td>" +
+          escapeHtml(formatPValue(result.p)) +
+          "</td><td>" +
+          escapeHtml(tTestInterpretation(metric, result)) +
+          "</td></tr>"
+        );
+      }
+
+      function formatStatNumber(value, digits) {
+        if (!Number.isFinite(value)) return "—";
+        return value.toFixed(digits);
+      }
+
+      function formatPValue(value) {
+        if (!Number.isFinite(value)) return "—";
+        if (value < 0.001) return "< .001";
+        return value.toFixed(3);
+      }
+
+      function tTestInterpretation(metric, result) {
+        if (!result || !Number.isFinite(result.p)) return "無法判定";
+        const significance = result.p < 0.05 ? "達顯著差異" : "未達顯著差異";
+        if (metric === "RT") {
+          if (result.diff < 0) return "A 反應時間比 B 較快，" + significance;
+          if (result.diff > 0) return "A 反應時間比 B 較慢，" + significance;
+          return "A 與 B 反應時間相同，" + significance;
+        }
+        if (result.diff > 0) return "A 正確率比 B 較高，" + significance;
+        if (result.diff < 0) return "A 正確率比 B 較低，" + significance;
+        return "A 與 B 正確率相同，" + significance;
       }
 
       function plotGroupPrimeMetric(elId, stats, options) {
