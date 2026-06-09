@@ -441,6 +441,37 @@
         overflow: visible;
       }
 
+      .item-analysis-card.is-excluded {
+        border-color: rgba(192, 57, 43, 0.4);
+        box-shadow: 0 1px 5px rgba(192, 57, 43, 0.16);
+      }
+
+      .item-exclude-toggle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border: 1px solid rgba(192, 57, 43, 0.28);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--red);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .item-exclude-toggle input {
+        accent-color: var(--red);
+      }
+
+      .item-analysis-card .target-panel {
+        padding-right: 78px;
+      }
+
       .item-head {
         display: flex;
         justify-content: space-between;
@@ -1243,6 +1274,7 @@
         results: [],
         subjects: [],
         trialMap: new Map(),
+        excludedAnalysisItemIds: new Set(),
       };
 
       const plotlyLayoutBase = {
@@ -1740,7 +1772,8 @@
         sel.value = values.includes(previous) ? previous : "";
       }
 
-      function filteredGroupAnalysisRows() {
+      function filteredGroupAnalysisRows(options = {}) {
+        const excludeItems = options.excludeItems !== false;
         const oralFilter = $("group-filter-oral").value;
         const writtenFilter = $("group-filter-written").value;
         const genderFilter = $("group-filter-gender").value;
@@ -1749,6 +1782,7 @@
           if (oralFilter && getOralLevel(survey) !== oralFilter) return false;
           if (writtenFilter && getWrittenLevel(survey) !== writtenFilter) return false;
           if (genderFilter && getGender(survey) !== genderFilter) return false;
+          if (excludeItems && state.excludedAnalysisItemIds.has(trimStr(row.item_id))) return false;
           return true;
         });
       }
@@ -1984,6 +2018,20 @@
         renderItemAnalysis();
       }
 
+      function handleItemExcludeChange(event) {
+        const target = event.target;
+        if (!target || !target.matches(".item-exclude-checkbox")) return;
+        const itemId = trimStr(target.dataset.itemId);
+        if (!itemId) return;
+        if (target.checked) {
+          state.excludedAnalysisItemIds.add(itemId);
+        } else {
+          state.excludedAnalysisItemIds.delete(itemId);
+        }
+        renderGroupAnalysis();
+        renderItemAnalysis();
+      }
+
       function renderItemAnalysis() {
         const currentGroup = $("item-analysis-group-select").value;
         const host = $("item-analysis-cards");
@@ -2000,7 +2048,7 @@
           return;
         }
 
-        const stats = itemPrimeStatsByItem(filteredGroupAnalysisRows());
+        const stats = itemPrimeStatsByItem(filteredGroupAnalysisRows({ excludeItems: false }));
         trials.forEach((trial) => {
           const card = document.createElement("article");
           card.className = "item-card item-analysis-card";
@@ -2012,10 +2060,17 @@
           const primeLexicalityLabel = designParts[0] || trimStr(meta.primeLexicality);
           const targetLexicalityLabel = designParts[1] || trimStr(meta.targetLexicality);
           const itemId = trimStr(trial.item_id);
+          const isExcluded = state.excludedAnalysisItemIds.has(itemId);
           const primeAStats = stats.get(itemId + "|A");
           const primeBStats = stats.get(itemId + "|B");
+          if (isExcluded) card.classList.add("is-excluded");
 
           card.innerHTML =
+            '<label class="item-exclude-toggle"><input type="checkbox" class="item-exclude-checkbox" data-item-id="' +
+            escapeHtml(itemId) +
+            '"' +
+            (isExcluded ? " checked" : "") +
+            ">排除</label>" +
             '<div class="target-panel"><div class="target-section-label">Target · ' +
             escapeHtml(targetLexicalityLabel) +
             "</div>" +
@@ -2573,6 +2628,7 @@
         $("item-analysis-group-prev").addEventListener("click", () => moveItemAnalysisGroup(-1));
         $("item-analysis-group-next").addEventListener("click", () => moveItemAnalysisGroup(1));
         $("item-analysis-group-select").addEventListener("change", renderItemAnalysis);
+        $("item-analysis-cards").addEventListener("change", handleItemExcludeChange);
         $("group-filter-oral").addEventListener("change", () => {
           renderGroupAnalysis();
           renderItemAnalysis();
